@@ -1,0 +1,41 @@
+version: '3.8'
+
+services:
+  bot:
+    # En producción, usar imagen pre-construida
+    image: chatbot-twilio:latest
+    
+    # Restart más agresivo
+    restart: always
+    
+    # Recursos ajustados para producción
+    deploy:
+      resources:
+        limits:
+          cpus: '2'
+          memory: 1G
+        reservations:
+          cpus: '1'
+          memory: 512M
+      
+      # Modo de actualización
+      update_config:
+        parallelism: 1
+        delay: 10s
+        order: start-first
+    
+    # Health check más frecuente
+    healthcheck:
+      interval: 20s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+    
+    # Logs más detallados
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "50m"
+        max-file: "5"
+        labels: "production"
+
