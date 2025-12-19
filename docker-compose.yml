@@ -1,0 +1,61 @@
+version: '3.8'
+
+services:
+  # Servicio principal del bot
+  bot:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: chatbot-twilio:latest
+    container_name: chatbot-twilio-bot
+    
+    # Reinicio automático
+    restart: unless-stopped
+    
+    # Puerto expuesto
+    ports:
+      - "3000:3000"
+    
+    # Variables de entorno desde archivo
+    env_file:
+      - .env
+    
+    # Variables de entorno adicionales
+    environment:
+      - NODE_ENV=production
+      - TZ=America/Lima
+    
+    # Health check
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:3000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    
+    # Logs con rotación
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+    
+    # Límites de recursos (ajustar según tu EC2)
+    deploy:
+      resources:
+        limits:
+          cpus: '1'
+          memory: 512M
+        reservations:
+          cpus: '0.5'
+          memory: 256M
+    
+    # Red personalizada
+    networks:
+      - bot-network
+
+# Definición de redes
+networks:
+  bot-network:
+    driver: bridge
+    name: chatbot-network
