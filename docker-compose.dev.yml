@@ -1,0 +1,67 @@
+version: '3.8'
+
+services:
+  bot:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: chatbot-twilio:latest
+    container_name: chatbot-twilio-bot-dev
+    
+    # Reinicio automático
+    restart: unless-stopped
+    
+    # Puertos
+    ports:
+      - "3000:3000"
+    
+    # Variables de entorno
+    env_file:
+      - .env
+    
+    # Desarrollo
+    environment:
+      NODE_ENV: development
+      TZ: America/Lima
+      LOG_LEVEL: debug
+    
+    # Volumen para desarrollo (si quieres recargar código)
+    # Descomentar si quieres hot-reload:
+    # volumes:
+    #   - .:/app
+    #   - /app/node_modules
+    
+    # Health check menos estricto en desarrollo
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:3000/health"]
+      interval: 60s
+      timeout: 10s
+      retries: 2
+      start_period: 30s
+    
+    # Logs simples para desarrollo
+    logging:
+      driver: json-file
+      options:
+        max-size: "5m"
+        max-file: "2"
+        labels: "env=development,service=chatbot"
+    
+    # Recursos mínimos para desarrollo
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 256M
+        reservations:
+          cpus: '0.25'
+          memory: 128M
+    
+    # Red
+    networks:
+      - bot-network
+
+networks:
+  bot-network:
+    driver: bridge
+    name: chatbot-network-dev

@@ -4,9 +4,24 @@ services:
   bot:
     # En producción, usar imagen pre-construida
     image: chatbot-twilio:latest
+    container_name: chatbot-twilio-bot-prod
     
-    # Restart más agresivo
+    # Restart más agresivo en producción
     restart: always
+    
+    # Puerto
+    ports:
+      - "3000:3000"
+    
+    # Variables de entorno desde archivo
+    env_file:
+      - .env
+    
+    # Variables de producción
+    environment:
+      NODE_ENV: production
+      TZ: America/Lima
+      LOG_LEVEL: warn
     
     # Recursos ajustados para producción
     deploy:
@@ -18,24 +33,35 @@ services:
           cpus: '1'
           memory: 512M
       
-      # Modo de actualización
+      # Estrategia de actualización
       update_config:
         parallelism: 1
         delay: 10s
         order: start-first
+        failure_action: rollback
     
-    # Health check más frecuente
+    # Health check más frecuente en producción
     healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:3000/health"]
       interval: 20s
       timeout: 5s
       retries: 5
       start_period: 30s
     
-    # Logs más detallados
+    # Logs más detallados en producción
     logging:
-      driver: "json-file"
+      driver: json-file
       options:
         max-size: "50m"
         max-file: "5"
-        labels: "production"
+        labels: "env=production,service=chatbot"
+    
+    # Red personalizada
+    networks:
+      - bot-network
+
+networks:
+  bot-network:
+    driver: bridge
+    name: chatbot-network-prod
 

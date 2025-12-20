@@ -50,12 +50,12 @@ EXPOSE 3000
 ENV NODE_ENV=production \
     PORT=3000
 
-# Health check
+# Health check (usa wget disponible en Alpine)
 HEALTHCHECK --interval=30s --timeout=10s --start-period=40s --retries=3 \
-    CMD node -e "require('http').get('http://localhost:3000/health', (r) => {process.exit(r.statusCode === 200 ? 0 : 1)})"
+    CMD wget --no-verbose --tries=1 --spider http://localhost:3000/health || exit 1
 
 # Usar dumb-init para manejar señales correctamente
 ENTRYPOINT ["dumb-init", "--"]
 
 # Comando de inicio
-CMD ["node", "app.js"]
+CMD ["node", "server.js"]
