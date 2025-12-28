@@ -1,132 +1,149 @@
+const fs = require('fs');
+const path = require('path');
+
 /**
- * Menús y opciones genéricas del chatbot
- * Estas opciones NO requieren integración con la API
+ * Configuración de menús del chatbot
+ * Carga dinámicamente los procedimientos desde JSON
  */
 
-const menus = {
-  principal: {
-    text: `👋 *¡Bienvenido!*
+class MenusConfig {
+  constructor() {
+    this.procedimientos = this.cargarProcedimientos();
+  }
+
+  /**
+   * Carga los procedimientos desde el archivo JSON
+   */
+  cargarProcedimientos() {
+    try {
+      const jsonPath = path.join(__dirname, '../config/procedimientos.json');
+      const data = fs.readFileSync(jsonPath, 'utf8');
+      return JSON.parse(data).procedimientos;
+    } catch (error) {
+      console.error('Error cargando procedimientos.json:', error);
+      return [];
+    }
+  }
+
+  /**
+   * Obtiene el menú principal
+   */
+  getMenuPrincipal() {
+    return {
+      id: 'principal',
+      text: `👋 *¡Hola!* Gracias por contactar con *AndyBot* de Caja Los Andes 🏢😁
 
 ¿En qué puedo ayudarte?
 
-1️⃣ 📅 Horarios de atención
-2️⃣ 📍 Ubicación y sucursales
-3️⃣ 💰 Precios y servicios
-4️⃣ 📞 Información de contacto
-5️⃣ 💬 Hablar con asistente (IA)
+1️⃣ 💬 Hablar con asistente (IA)
+2️⃣ 📄 Procedimientos de Operaciones
+3️⃣ 📝 Formularios
+4️⃣ 📞 Directorio Telefónico
 
 _Escribe el número de tu opción o haz una pregunta directamente._`,
+      opciones: {
+        '1': 'chatbot',
+        '2': 'procedimientos',
+        '3': 'formularios',
+        '4': 'directorio'
+      }
+    };
+  }
+
+  /**
+   * Obtiene el menú de procedimientos (dinámico)
+   */
+  getMenuProcedimientos() {
+    let texto = `📄 *PROCEDIMIENTOS DE OPERACIONES* 📋\n\n`;
+    texto += `Selecciona el procedimiento que necesitas:\n\n`;
+
+    this.procedimientos.forEach(proc => {
+      texto += `🔹 ${proc.numero}. ${proc.nombre} ${proc.emoji}\n`;
+    });
+
+    texto += `\n🔙 0. Volver al Menú Principal 🏠\n`;
+    texto += `\n_Escribe el número del procedimiento._`;
+
+    const opciones = { '0': 'volver' };
+    this.procedimientos.forEach(proc => {
+      opciones[proc.numero.toString()] = proc.id;
+    });
+
+    return {
+      id: 'procedimientos',
+      text: texto,
+      opciones: opciones
+    };
+  }
+
+  /**
+   * Obtiene el menú detalle de un procedimiento específico
+   */
+  getMenuDetalleProcedimiento(procedimientoId) {
+    const proc = this.procedimientos.find(p => p.id === procedimientoId);
     
-    opciones: {
-      '1': 'horarios',
-      '2': 'ubicacion',
-      '3': 'precios',
-      '4': 'contacto',
-      '5': 'chatbot'
+    if (!proc) {
+      return null;
     }
+
+    const texto = `${proc.emoji} *${proc.nombre.toUpperCase()}* ${proc.emoji}
+
+¡Estamos para ayudarte! ✍️💻 
+Elige una de las siguientes opciones ⬇️
+
+1️⃣ 📽️ Ver video tutorial del procedimiento
+2️⃣ 📄 Ver el PDF o flyer informativo
+3️⃣ 💬 Tengo una consulta, quiero escribirla
+
+🔙 0. Volver a Procedimientos
+
+_Escribe el número de tu opción._`;
+
+    return {
+      id: 'detalle_procedimiento',
+      procedimientoId: procedimientoId,
+      text: texto,
+      opciones: {
+        '1': 'ver_video',
+        '2': 'ver_documento',
+        '3': 'consulta_ia',
+        '0': 'volver'
+      },
+      recursos: proc.recursos
+    };
   }
-};
 
-const respuestasGenericas = {
-  horarios: {
-    text: `📅 *HORARIOS DE ATENCIÓN*
+  /**
+   * Obtiene el menú de formularios
+   */
+  getMenuFormularios() {
+    return {
+      id: 'formularios',
+      text: `📝 *FORMULARIOS*
 
-🕐 Lunes a Viernes: 9:00 AM - 6:00 PM
-🕐 Sábados: 9:00 AM - 2:00 PM
-🕐 Domingos: Cerrado
+Esta sección estará disponible próximamente.
 
-⚠️ Horarios especiales en feriados
-
-━━━━━━━━━━━━━━━━━━━━━━
-Escribe *menu* para volver al inicio`,
-    nextState: 'menu'
-  },
-  
-  ubicacion: {
-    text: `📍 *NUESTRAS UBICACIONES*
-
-*Sede Principal:*
-Av. Larco 1234, Miraflores
-Lima, Perú
-
-*Sucursal 2:*
-Av. Arequipa 567, San Isidro
-Lima, Perú
-
-*Sucursal 3:*
-Av. Javier Prado 890, Surco
-Lima, Perú
-
-🚗 Contamos con estacionamiento
-🚇 Cerca de estaciones de Metro
-
-━━━━━━━━━━━━━━━━━━━━━━
-Escribe *menu* para volver al inicio`,
-    nextState: 'menu'
-  },
-  
-  precios: {
-    text: `💰 *PRECIOS Y SERVICIOS*
-
-*Servicio Básico:* S/. 99
-✓ Consulta inicial
-✓ Diagnóstico
-✓ Recomendaciones
-
-*Servicio Premium:* S/. 199
-✓ Todo lo del básico
-✓ Seguimiento personalizado
-✓ Soporte 24/7
-
-*Servicio Enterprise:* S/. 399
-✓ Todo lo del premium
-✓ Atención prioritaria
-✓ Reportes detallados
-
-📞 Pregunta por nuestras promociones
-
-━━━━━━━━━━━━━━━━━━━━━━
-Escribe *menu* para volver al inicio`,
-    nextState: 'menu'
-  },
-  
-  contacto: {
-    text: `📞 *INFORMACIÓN DE CONTACTO*
-
-📱 WhatsApp: +51 999 888 777
-📧 Email: contacto@empresa.com
-🌐 Web: www.empresa.com
-⏰ Atención: Lunes a Viernes 9 AM - 6 PM
-
-¡Nos encantaría escucharte!
-
-━━━━━━━━━━━━━━━━━━━━━━
-Escribe *menu* para volver al inicio`,
-    nextState: 'menu'
+🔙 Escribe *menu* para volver al inicio.`,
+      opciones: {
+        'menu': 'principal'
+      }
+    };
   }
-};
 
-/**
- * Obtiene la respuesta genérica basada en la opción
- * @param {string} opcion - La opción seleccionada (1-4)
- * @returns {object} La respuesta genérica
- */
-function obtenerRespuestaGenerica(opcion) {
-  const opcionMap = menus.principal.opciones[opcion];
-  return respuestasGenericas[opcionMap] || null;
+  /**
+   * Obtiene información de un procedimiento por ID
+   */
+  getProcedimiento(procedimientoId) {
+    return this.procedimientos.find(p => p.id === procedimientoId);
+  }
+
+  /**
+   * Obtiene información de un procedimiento por número
+   */
+  getProcedimientoPorNumero(numero) {
+    return this.procedimientos.find(p => p.numero === parseInt(numero));
+  }
 }
 
-/**
- * Obtiene el menú principal
- * @returns {object} El menú principal
- */
-function obtenerMenuPrincipal() {
-  return menus.principal;
-}
-
-module.exports = {
-  menus,
-  respuestasGenericas,
-  obtenerRespuestaGenerica,
-  obtenerMenuPrincipal
-};
+// Exportar instancia única (singleton)
+module.exports = new MenusConfig();

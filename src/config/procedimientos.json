@@ -1,0 +1,148 @@
+{
+  "procedimientos": [
+    {
+      "id": "firma_electronica",
+      "numero": 1,
+      "nombre": "Firma Electrónica",
+      "emoji": "✍️",
+      "recursos": {
+        "video": "videos/control_biometrico.mp4",
+        "documento": "documentos/control_biometrico.pdf",
+        "contexto_ia": "La Firma Electrónica en Caja Los Andes es un procedimiento que permite a los clientes firmar documentos digitalmente con validez legal. El sistema utiliza certificados digitales y garantiza la autenticidad e integridad de los documentos firmados.",
+        "keywords": ["firma", "digital", "electrónica", "certificado", "documento"]
+      },
+      "metadata": {
+        "categoria": "Operaciones Digitales",
+        "fecha_actualizacion": "2024-01-15"
+      }
+    },
+    {
+      "id": "transferencias_cce",
+      "numero": 2,
+      "nombre": "Transferencias Interbancarias CCE",
+      "emoji": "💸",
+      "recursos": {
+        "video": "videos/control_biometrico.mp4",
+        "documento": "documentos/control_biometrico.pdf",
+        "contexto_ia": "Las Transferencias Interbancarias CCE (Cámara de Compensación Electrónica) permiten realizar transferencias de dinero entre diferentes bancos del sistema financiero peruano de forma electrónica y segura.",
+        "keywords": ["transferencia", "cce", "interbancaria", "banco", "envío", "dinero"]
+      },
+      "metadata": {
+        "categoria": "Transacciones",
+        "fecha_actualizacion": "2024-01-15"
+      }
+    },
+    {
+      "id": "control_biometrico",
+      "numero": 3,
+      "nombre": "Control y Excepción Biométrica",
+      "emoji": "🛂",
+      "recursos": {
+        "video": "videos/control_biometrico.mp4",
+        "documento": "documentos/control_biometrico.pdf",
+        "contexto_ia": "El Control Biométrico en Caja Los Andes es un sistema de identificación que utiliza características físicas únicas (huella dactilar, reconocimiento facial) para validar la identidad de los clientes. Las excepciones biométricas son casos especiales donde se requiere validación alternativa.",
+        "keywords": ["biométrico", "huella", "identificación", "excepción", "validación"]
+      },
+      "metadata": {
+        "categoria": "Seguridad",
+        "fecha_actualizacion": "2024-01-15"
+      }
+    },
+    {
+      "id": "registro_cliente",
+      "numero": 4,
+      "nombre": "Registro de Nuevo Cliente",
+      "emoji": "🧑",
+      "recursos": {
+        "video": "videos/control_biometrico.mp4",
+        "documento": "documentos/control_biometrico.pdf",
+        "contexto_ia": "El procedimiento de Registro de Nuevo Cliente detalla los pasos para dar de alta a nuevos clientes en el sistema de Caja Los Andes, incluyendo la recopilación de documentos, validación de identidad y apertura de cuenta.",
+        "keywords": ["registro", "nuevo", "cliente", "alta", "apertura", "cuenta"]
+      },
+      "metadata": {
+        "categoria": "Atención al Cliente",
+        "fecha_actualizacion": "2024-01-15"
+      }
+    },
+    {
+      "id": "actualizacion_datos",
+      "numero": 5,
+      "nombre": "Actualización de Datos de Cliente",
+      "emoji": "🔄",
+      "recursos": {
+        "video": "videos/control_biometrico.mp4",
+        "documento": "documentos/control_biometrico.pdf",
+        "contexto_ia": "Este procedimiento explica cómo actualizar la información personal y de contacto de los clientes existentes en el sistema, incluyendo cambios de dirección, teléfono, correo electrónico y datos laborales.",
+        "keywords": ["actualizar", "modificar", "datos", "información", "cliente", "cambio"]
+      },
+      "metadata": {
+        "categoria": "Atención al Cliente",
+        "fecha_actualizacion": "2024-01-15"
+      }
+    },
+    {
+      "id": "desembolso_grupal",
+      "numero": 6,
+      "nombre": "Desembolso Grupal",
+      "emoji": "💰",
+      "recursos": {
+        "video": "videos/control_biometrico.mp4",
+        "documento": "documentos/control_biometrico.pdf",
+        "contexto_ia": "El Desembolso Grupal es el procedimiento para entregar préstamos a grupos de clientes (bancos comunales, grupos solidarios) de manera simultánea y organizada.",
+        "keywords": ["desembolso", "grupal", "préstamo", "crédito", "grupo", "banco comunal"]
+      },
+      "metadata": {
+        "categoria": "Créditos",
+        "fecha_actualizacion": "2024-01-15"
+      }
+    },
+    {
+      "id": "giros_wupos",
+      "numero": 7,
+      "nombre": "Giros WUPOS",
+      "emoji": "🏦",
+      "recursos": {
+        "video": "videos/control_biometrico.mp4",
+        "documento": "documentos/control_biometrico.pdf",
+        "contexto_ia": "WUPOS es el sistema de Western Union para realizar envíos y recepciones de dinero internacional. Este procedimiento explica cómo procesar giros nacionales e internacionales.",
+        "keywords": ["giro", "wupos", "western union", "remesa", "envío internacional"]
+      },
+      "metadata": {
+        "categoria": "Remesas",
+        "fecha_actualizacion": "2024-01-15"
+      }
+    },
+    {
+      "id": "garantias",
+      "numero": 8,
+      "nombre": "Garantías",
+      "emoji": "📑",
+      "recursos": {
+        "video": "videos/control_biometrico.mp4",
+        "documento": "documentos/control_biometrico.pdf",
+        "contexto_ia": "Este procedimiento detalla el registro, custodia y liberación de garantías (prendarias, hipotecarias, mobiliarias) asociadas a los créditos otorgados por Caja Los Andes.",
+        "keywords": ["garantía", "hipoteca", "prenda", "colateral", "respaldo"]
+      },
+      "metadata": {
+        "categoria": "Créditos",
+        "fecha_actualizacion": "2024-01-15"
+      }
+    },
+    {
+      "id": "servicios_recargas",
+      "numero": 9,
+      "nombre": "Registro de Servicios y Recargas en CoreBank",
+      "emoji": "🔋",
+      "recursos": {
+        "video": "videos/control_biometrico.mp4",
+        "documento": "documentos/control_biometrico.pdf",
+        "contexto_ia": "Procedimiento para registrar pagos de servicios (luz, agua, teléfono) y recargas de celular en el sistema CoreBank de Caja Los Andes.",
+        "keywords": ["servicios", "recarga", "pago", "celular", "corebank", "luz", "agua"]
+      },
+      "metadata": {
+        "categoria": "Servicios",
+        "fecha_actualizacion": "2024-01-15"
+      }
+    }
+  ]
+}

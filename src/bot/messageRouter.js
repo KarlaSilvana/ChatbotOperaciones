@@ -1,10 +1,10 @@
 /**
  * Enrutador de mensajes
- * Decide si la pregunta es genérica (1-4) o requiere la API (5)
+ * Procesa mensajes usando navigationManager para navegación dinámica
  */
 
-const { obtenerRespuestaGenerica, obtenerMenuPrincipal } = require('./menus');
-const stateManager = require('./stateManager');
+const navigationManager = require('./navigationManager');
+const logger = require('../utils/logger');
 
 /**
  * Procesa un mensaje del usuario y retorna la respuesta apropiada
@@ -13,66 +13,94 @@ const stateManager = require('./stateManager');
  * @returns {object} Respuesta a enviar al usuario
  */
 async function procesarMensaje(userId, mensaje) {
-  // Obtener estado actual del usuario
-  const userState = stateManager.getState(userId);
-  
-  // Incrementar contador de mensajes
-  stateManager.incrementMessageCount(userId);
-  
-  // Normalizar el mensaje
-  const mensajeNormalizado = mensaje.toLowerCase().trim();
-
-  // Comando para volver al menú
-  if (mensajeNormalizado === 'menu' || mensajeNormalizado === 'menú') {
-    stateManager.setState(userId, { state: 'menu', lastMessage: mensaje });
-    return obtenerMenuPrincipal();
-  }
-
-  // Si el usuario está en estado de menú
-  if (userState.state === 'menu' || !userState.state) {
-    // Verificar si es una opción válida (1-4: genérica, 5: API)
-    if (mensajeNormalizado === '1' || mensajeNormalizado === '2' || 
-        mensajeNormalizado === '3' || mensajeNormalizado === '4') {
-      
-      // Es una pregunta genérica
-      stateManager.setState(userId, { 
-        state: 'generico',
-        lastMessage: mensaje 
-      });
-      
-      const respuesta = obtenerRespuestaGenerica(mensajeNormalizado);
-      return respuesta || obtenerMenuPrincipal();
-    }
+  try {
+    // Inicializar usuario si no existe
+    navigationManager.initUser(userId);
     
-    // Si es opción 5 o pregunta libre, prepararía para API
-    if (mensajeNormalizado === '5') {
-      stateManager.setState(userId, { 
-        state: 'chatbot',
-        lastMessage: mensaje 
-      });
-      
-      return {
-        text: `💬 *Conectando con nuestro asistente IA...*
+    // Normalizar el mensaje
+    const mensajeNormalizado = mensaje.toLowerCase().trim();
 
-_Un momento por favor, estamos procesando tu pregunta._`,
-        nextState: 'chatbot'
+    // Comando para volver al menú principal
+    if (mensajeNormalizado === 'menu' || mensajeNormalizado === 'menú') {
+      const menu = navigationManager.reset(userId);
+      return {
+        text: menu.text,
+        action: 'navigate'
       };
     }
-    
-    // Si no es una opción reconocida, mostrar menú nuevamente
-    stateManager.setState(userId, { state: 'menu' });
-    return obtenerMenuPrincipal();
-  }
 
-  // Si viene del menú genérico, volver al menú
-  if (userState.state === 'generico') {
-    stateManager.setState(userId, { state: 'menu' });
-    return obtenerMenuPrincipal();
-  }
+    // Procesar la opción seleccionada
+    const resultado = navigationManager.processOption(userId, mensajeNormalizado);
 
-  // Fallback: mostrar menú
-  stateManager.setState(userId, { state: 'menu' });
-  return obtenerMenuPrincipal();
+    // Retornar resultado con formato compatible
+    if (resultado.action === 'navigate' && resultado.menu) {
+      return {
+        text: resultado.menu.text,
+        action: 'navigate',
+        procedimientoId: resultado.menu.procedimientoId
+      };
+    }
+
+    if (resultado.action === 'send_video') {
+      return {
+        text: 'Preparando video...',
+        action: 'send_video',
+        procedimientoId: resultado.procedimientoId
+      };
+    }
+
+    if (resultado.action === 'send_documento') {
+      return {
+        text: 'Preparando documento...',
+        action: 'send_documento',
+        procedimientoId: resultado.procedimientoId
+      };
+    }
+
+    if (resultado.action === 'start_ia') {
+      return {
+        text: resultado.message,
+        action: 'start_ia'
+      };
+    }
+
+    if (resultado.action === 'start_consulta_ia') {
+      return {
+        text: resultado.message,
+        action: 'start_consulta_ia',
+        procedimientoId: resultado.procedimientoId
+      };
+    }
+
+    if (resultado.action === 'invalid') {
+      const currentMenu = navigationManager.getCurrentMenu(userId);
+      return {
+        text: resultado.message + '\n\n' + currentMenu.text,
+        action: 'invalid'
+      };
+    }
+
+    if (resultado.action === 'info') {
+      return {
+        text: resultado.message,
+        action: 'info'
+      };
+    }
+
+    // Fallback
+    const menu = navigationManager.getCurrentMenu(userId);
+    return {
+      text: menu.text,
+      action: 'navigate'
+    };
+
+  } catch (error) {
+    logger.error('Error en procesarMensaje:', error);
+    return {
+      text: '❌ Ocurrió un error procesando tu mensaje. Por favor intenta nuevamente.',
+      action: 'error'
+    };
+  }
 }
 
 module.exports = {
