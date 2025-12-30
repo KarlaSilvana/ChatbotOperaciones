@@ -117,7 +117,7 @@ async function procesarMensaje(userId, mensaje) {
       navigationManager.startChatIA(userId);
       return {
         text: resultado.message,
-        action: 'chat_ia_response'
+        action: 'navigate'
       };
     }
 
@@ -126,9 +126,7 @@ async function procesarMensaje(userId, mensaje) {
       navigationManager.startConsultaIA(userId, resultado.procedimientoId, resultado.procedimientoNombre);
       return {
         text: resultado.message,
-        action: 'chat_ia_response',
-        procedimientoId: resultado.procedimientoId,
-        procedimientoNombre: resultado.procedimientoNombre
+        action: 'navigate'
       };
     }
 

@@ -51,7 +51,7 @@ describe('MessageRouter - Navigation Integration', () => {
 
   it('debe retornar menú principal al inicio', async () => {
     const respuesta = await procesarMensaje(testUserId, '1');
-    expect(respuesta.action).toBe('chat_ia_response');
+    expect(respuesta.action).toBe('navigate');
   });
 
   it('debe navegar a procedimientos con opción 2', async () => {
@@ -107,7 +107,7 @@ describe('MessageRouter - Navigation Integration', () => {
     await procesarMensaje(testUserId, '2');
     await procesarMensaje(testUserId, '1');
     const respuesta = await procesarMensaje(testUserId, '3');
-    expect(respuesta.action).toBe('chat_ia_response');
+    expect(respuesta.action).toBe('navigate');
   });
 
   it('debe volver desde procedimiento con 0', async () => {
