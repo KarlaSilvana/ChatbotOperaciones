@@ -11,6 +11,8 @@ const { procesarMensaje } = require('./src/bot/messageRouter');
 const mediaService = require('./src/services/mediaService');
 const navigationManager = require('./src/bot/navigationManager');
 const sessionScheduler = require('./src/bot/sessionScheduler');
+const ragService = require('./src/services/ragService');
+const MarkdownToWhatsApp = require('./src/services/markdownToWhatsApp');
 const logger = require('./src/utils/logger');
 
 const app = express();
@@ -74,6 +76,63 @@ app.post('/webhook/messages', async (req, res) => {
     }
 
     // Manejar diferentes tipos de acciones
+    if (respuesta.action === 'chat_ia_response') {
+      // ⭐ NUEVO: Manejar consulta a RAG
+      try {
+        // Obtener contexto IA
+        const context = navigationManager.getIAContext(phoneNumber);
+        const modoIA = respuesta.modoIA || navigationManager.getIAMode(phoneNumber);
+        
+        // Llamar a RAG Service con o sin tema
+        const tema = modoIA === 'consulta' ? context.procedimientoNombre : null;
+        const ragResponse = await ragService.sendQuery(respuesta.text, tema);
+        
+        // Agregar mensaje de usuario al historial
+        navigationManager.addIAConversationMessage(phoneNumber, {
+          role: 'user',
+          content: respuesta.text
+        });
+        
+        // Agregar respuesta de IA al historial
+        navigationManager.addIAConversationMessage(phoneNumber, {
+          role: 'assistant',
+          content: ragResponse.response
+        });
+        
+        // Convertir respuesta Markdown a WhatsApp
+        const messages = MarkdownToWhatsApp.splitMessages(ragResponse.response);
+        
+        // Enviar todos los mensajes
+        for (const msg of messages) {
+          await twilio_client.messages.create({
+            from: to,
+            to: from,
+            body: msg
+          });
+        }
+        
+        // Log de éxito
+        logger.success(`Respuesta IA enviada a ${from} (${messages.length} mensaje${messages.length > 1 ? 's' : ''}, modo: ${modoIA})`);
+        
+        res.status(200).send('Message processed');
+        return;
+        
+      } catch (ragError) {
+        logger.error('Error consultando RAG API:', ragError);
+        
+        // Enviar mensaje de error al usuario
+        const errorMessage = '❌ Disculpa, hubo un problema al procesar tu pregunta. Por favor intenta nuevamente.';
+        await twilio_client.messages.create({
+          from: to,
+          to: from,
+          body: errorMessage
+        });
+        
+        res.status(500).send('RAG API error');
+        return;
+      }
+    }
+    
     if (respuesta.action === 'send_video') {
       // Enviar video del procedimiento
       const resultado = await mediaService.enviarVideo(twilio_client, from, respuesta.procedimientoId);

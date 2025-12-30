@@ -19,11 +19,16 @@ class NavigationManager {
       this.userStates.set(userId, {
         navigationStack: ['principal'],
         currentMenu: 'principal',
-        context: {},
+        context: {
+          modoIA: null,  // 'chat' o 'consulta' si está en modo IA
+          procedimientoId: null,  // ID del procedimiento si está en consulta
+          procedimientoNombre: null,  // Nombre del procedimiento para contexto RAG
+          iaConversationMessages: []  // Historial de conversación con IA
+        },
         lastActivity: Date.now(),
-        isNewSession: true, // Indica si es el primer mensaje del usuario
+        isNewSession: true,
         sessionStartTime: Date.now(),
-        notifiedOfExpiration: false // Track si ya fue notificado de expiración automáticamente
+        notifiedOfExpiration: false
       });
       return this.getUserState(userId);
     }
@@ -33,12 +38,17 @@ class NavigationManager {
       this.userStates.set(userId, {
         navigationStack: ['principal'],
         currentMenu: 'principal',
-        context: {},
+        context: {
+          modoIA: null,
+          procedimientoId: null,
+          procedimientoNombre: null,
+          iaConversationMessages: []
+        },
         lastActivity: Date.now(),
-        isNewSession: true, // LA PRÓXIMA será como primer mensaje (nueva sesión)
-        sessionExpired: true, // Flag para enviar mensaje de sesión terminada
+        isNewSession: true,
+        sessionExpired: true,
         sessionStartTime: Date.now(),
-        notifiedOfExpiration: false // Resetear flag para nueva sesión
+        notifiedOfExpiration: false
       });
     }
     
@@ -142,7 +152,12 @@ class NavigationManager {
     this.userStates.set(userId, {
       navigationStack: ['principal'],
       currentMenu: 'principal',
-      context: {},
+      context: {
+        modoIA: null,
+        procedimientoId: null,
+        procedimientoNombre: null,
+        iaConversationMessages: []
+      },
       lastActivity: Date.now(),
       isNewSession: state.isNewSession || false, // Mantener flag
       sessionStartTime: Date.now()
@@ -287,6 +302,107 @@ class NavigationManager {
         this.userStates.delete(userId);
       }
     }
+  }
+
+  /**
+   * Inicia modo Chat IA General (Opción 1)
+   * @param {string} userId - ID del usuario
+   */
+  startChatIA(userId) {
+    const state = this.getUserState(userId);
+    if (!state) return false;
+    
+    state.context.modoIA = 'chat';
+    state.context.procedimientoId = null;
+    state.context.procedimientoNombre = null;
+    state.context.iaConversationMessages = [];
+    this.userStates.set(userId, state);
+    return true;
+  }
+
+  /**
+   * Inicia modo Consulta IA sobre Procedimiento (Opción 3)
+   * @param {string} userId - ID del usuario
+   * @param {string} procedimientoId - ID del procedimiento
+   * @param {string} procedimientoNombre - Nombre del procedimiento
+   */
+  startConsultaIA(userId, procedimientoId, procedimientoNombre) {
+    const state = this.getUserState(userId);
+    if (!state) return false;
+    
+    state.context.modoIA = 'consulta';
+    state.context.procedimientoId = procedimientoId;
+    state.context.procedimientoNombre = procedimientoNombre;
+    state.context.iaConversationMessages = [];
+    this.userStates.set(userId, state);
+    return true;
+  }
+
+  /**
+   * Obtiene el modo IA actual del usuario
+   * @param {string} userId - ID del usuario
+   * @returns {string|null} 'chat', 'consulta', o null
+   */
+  getIAMode(userId) {
+    const state = this.getUserState(userId);
+    return state ? state.context.modoIA : null;
+  }
+
+  /**
+   * Obtiene contexto IA del usuario
+   * @param {string} userId - ID del usuario
+   * @returns {object} Contexto IA
+   */
+  getIAContext(userId) {
+    const state = this.getUserState(userId);
+    if (!state) return null;
+    
+    return {
+      modoIA: state.context.modoIA,
+      procedimientoNombre: state.context.procedimientoNombre,
+      procedimientoId: state.context.procedimientoId,
+      conversationMessages: state.context.iaConversationMessages
+    };
+  }
+
+  /**
+   * Agrega mensaje al historial de conversación IA
+   * @param {string} userId - ID del usuario
+   * @param {object} message - {role: 'user'|'assistant', content: string}
+   */
+  addIAConversationMessage(userId, message) {
+    const state = this.getUserState(userId);
+    if (!state) return false;
+    
+    if (!state.context.iaConversationMessages) {
+      state.context.iaConversationMessages = [];
+    }
+    
+    state.context.iaConversationMessages.push({
+      ...message,
+      timestamp: Date.now()
+    });
+    
+    this.userStates.set(userId, state);
+    return true;
+  }
+
+  /**
+   * Salir de modo IA (volver a menú principal)
+   * @param {string} userId - ID del usuario
+   */
+  exitIAMode(userId) {
+    const state = this.getUserState(userId);
+    if (!state) return false;
+    
+    state.context.modoIA = null;
+    state.context.procedimientoId = null;
+    state.context.procedimientoNombre = null;
+    state.context.iaConversationMessages = [];
+    state.navigationStack = ['principal'];
+    state.currentMenu = 'principal';
+    this.userStates.set(userId, state);
+    return true;
   }
 }
 

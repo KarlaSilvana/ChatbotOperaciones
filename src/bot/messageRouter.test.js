@@ -72,7 +72,7 @@ describe('MessageRouter - Navigation Integration', () => {
 
   it('debe activar chat IA con opción 1', async () => {
     const respuesta = await procesarMensaje(testUserId, '1');
-    expect(respuesta.action).toBe('start_ia');
+    expect(respuesta.action).toBe('chat_ia_response');
   });
 
   it('debe volver al menú con "menu"', async () => {
@@ -150,7 +150,7 @@ describe('MessageRouter - Navigation Integration', () => {
     
     // Segundo mensaje con opción válida "1"
     const valida = await procesarMensaje(testUserId, '1');
-    expect(valida.action).toBe('start_ia');
+    expect(valida.action).toBe('chat_ia_response');
   });
 
   describe('Sesión Expirada (30 minutos)', () => {

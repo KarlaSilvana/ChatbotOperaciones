@@ -45,6 +45,18 @@ async function procesarMensaje(userId, mensaje) {
       currentState.lastActivity = Date.now();
       navigationManager.userStates.set(userId, currentState);
     }
+
+    // ⭐ NUEVO: Detectar si usuario está en modo IA
+    const modoIA = navigationManager.getIAMode(userId);
+    if (modoIA) {
+      // Usuario está en modo IA - retornar acción para que app.js llame a RAG
+      return {
+        text: mensaje,
+        action: 'chat_ia_response',
+        modoIA: modoIA,
+        context: navigationManager.getIAContext(userId)
+      };
+    }
     
     // Obtener si es primer mensaje del usuario
     const isFirstMessage = navigationManager.getAndClearNewSessionFlag(userId);
@@ -90,17 +102,22 @@ async function procesarMensaje(userId, mensaje) {
     }
 
     if (resultado.action === 'start_ia') {
+      // Opción 1 - Chat IA General (sin contexto de procedimiento)
+      navigationManager.startChatIA(userId);
       return {
         text: resultado.message,
-        action: 'start_ia'
+        action: 'chat_ia_response'
       };
     }
 
     if (resultado.action === 'start_consulta_ia') {
+      // Opción 3 - Consulta IA sobre procedimiento (con contexto)
+      navigationManager.startConsultaIA(userId, resultado.procedimientoId, resultado.procedimientoNombre);
       return {
         text: resultado.message,
-        action: 'start_consulta_ia',
-        procedimientoId: resultado.procedimientoId
+        action: 'chat_ia_response',
+        procedimientoId: resultado.procedimientoId,
+        procedimientoNombre: resultado.procedimientoNombre
       };
     }
 
