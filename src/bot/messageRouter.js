@@ -5,6 +5,7 @@
 
 const navigationManager = require('./navigationManager');
 const logger = require('../utils/logger');
+const messages = require('../config/messages');
 
 /**
  * Procesa un mensaje del usuario y retorna la respuesta apropiada
@@ -14,8 +15,39 @@ const logger = require('../utils/logger');
  */
 async function procesarMensaje(userId, mensaje) {
   try {
-    // Inicializar usuario si no existe
-    navigationManager.initUser(userId);
+    // Primero, obtener el estado actual del usuario (sin reinicializar)
+    let userState = navigationManager.getUserState(userId);
+    
+    // Si el usuario NO existe, inicializarlo (es su primer mensaje)
+    if (!userState) {
+      navigationManager.initUser(userId);
+      userState = navigationManager.getUserState(userId);
+    } else {
+      // El usuario existe, verificar si la sesión expiró
+      const sessionHasExpired = navigationManager.isSessionExpired(userId);
+      
+      if (sessionHasExpired) {
+        // La sesión expiró
+        const expiredMessage = messages.SESSION_EXPIRED;
+        
+        // Reinicializar la sesión para que esté lista
+        navigationManager.initUser(userId);
+        
+        return {
+          text: expiredMessage,
+          action: 'session_expired'
+        };
+      }
+      
+      // Actualizar lastActivity si NO ha expirado
+      // Asegurarse de guardar cambios al estado
+      const currentState = navigationManager.getUserState(userId);
+      currentState.lastActivity = Date.now();
+      navigationManager.userStates.set(userId, currentState);
+    }
+    
+    // Obtener si es primer mensaje del usuario
+    const isFirstMessage = navigationManager.getAndClearNewSessionFlag(userId);
     
     // Normalizar el mensaje
     const mensajeNormalizado = mensaje.toLowerCase().trim();
@@ -74,6 +106,16 @@ async function procesarMensaje(userId, mensaje) {
 
     if (resultado.action === 'invalid') {
       const currentMenu = navigationManager.getCurrentMenu(userId);
+      
+      // Si es el primer mensaje, NO mostrar error, solo mostrar menú
+      if (isFirstMessage) {
+        return {
+          text: currentMenu.text,
+          action: 'navigate'
+        };
+      }
+      
+      // Si no es primer mensaje, mostrar error + menú
       return {
         text: resultado.message + '\n\n' + currentMenu.text,
         action: 'invalid'
@@ -97,7 +139,7 @@ async function procesarMensaje(userId, mensaje) {
   } catch (error) {
     logger.error('Error en procesarMensaje:', error);
     return {
-      text: '❌ Ocurrió un error procesando tu mensaje. Por favor intenta nuevamente.',
+      text: messages.ERROR_PROCESSING_MESSAGE,
       action: 'error'
     };
   }

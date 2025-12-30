@@ -12,6 +12,43 @@ describe('MessageRouter - Navigation Integration', () => {
     navigationManager.userStates.delete(testUserId);
   });
 
+  describe('Primer Mensaje (Usuario Nuevo)', () => {
+    it('debe mostrar menú sin error para primer mensaje inválido', async () => {
+      const respuesta = await procesarMensaje(testUserId, 'hola');
+      expect(respuesta.text).toContain('¡Hola!');
+      expect(respuesta.text).toContain('AndyBot');
+      expect(respuesta.action).toBe('navigate');
+      expect(respuesta.text).not.toContain('Opción no válida');
+    });
+
+    it('debe mostrar menú sin error para primer mensaje con texto aleatorio', async () => {
+      const respuesta = await procesarMensaje(testUserId, 'necesito ayuda');
+      expect(respuesta.text).toContain('¡Hola!');
+      expect(respuesta.action).toBe('navigate');
+    });
+
+    it('debe mostrar menú sin error para primer número inválido', async () => {
+      const respuesta = await procesarMensaje(testUserId, '99');
+      expect(respuesta.text).toContain('¡Hola!');
+      expect(respuesta.text).not.toContain('Opción no válida');
+    });
+  });
+
+  describe('Segundo Mensaje en Adelante', () => {
+    it('debe mostrar error para segundo mensaje inválido', async () => {
+      await procesarMensaje(testUserId, 'hola');
+      const respuesta = await procesarMensaje(testUserId, 'xyz');
+      expect(respuesta.text).toContain('Opción no válida');
+      expect(respuesta.action).toBe('invalid');
+    });
+
+    it('debe mostrar error para número inválido en segundo mensaje', async () => {
+      await procesarMensaje(testUserId, '2');
+      const respuesta = await procesarMensaje(testUserId, '99');
+      expect(respuesta.text).toContain('Opción no válida');
+    });
+  });
+
   it('debe retornar menú principal al inicio', async () => {
     const respuesta = await procesarMensaje(testUserId, '1');
     expect(respuesta.action).toBe('start_ia');
@@ -81,6 +118,10 @@ describe('MessageRouter - Navigation Integration', () => {
   });
 
   it('debe manejar entrada inválida', async () => {
+    // Primer mensaje (incluso si es inválido, no muestra error)
+    await procesarMensaje(testUserId, 'xyz');
+    
+    // Segundo mensaje inválido SÍ muestra error
     const respuesta = await procesarMensaje(testUserId, 'xyz');
     expect(respuesta.action).toBe('invalid');
   });
@@ -103,10 +144,72 @@ describe('MessageRouter - Navigation Integration', () => {
   });
 
   it('debe recuperarse de errores', async () => {
+    // Primer mensaje "xyz" (inválido pero es primer mensaje, no muestra error)
     const invalid = await procesarMensaje(testUserId, 'xyz');
-    expect(invalid.action).toBe('invalid');
-
+    expect(invalid.action).toBe('navigate');
+    
+    // Segundo mensaje con opción válida "1"
     const valida = await procesarMensaje(testUserId, '1');
     expect(valida.action).toBe('start_ia');
+  });
+
+  describe('Sesión Expirada (30 minutos)', () => {
+    it('debe detectar cuando la sesión ha expirado', async () => {
+      const userId = '+5198888888';
+      navigationManager.userStates.delete(userId);
+      
+      // Crear una sesión
+      await procesarMensaje(userId, '1');
+      
+      // Obtener el estado y simular que pasaron 31 minutos
+      const state = navigationManager.getUserState(userId);
+      state.lastActivity = Date.now() - (31 * 60 * 1000); // 31 minutos atrás
+      navigationManager.userStates.set(userId, state);
+      
+      // Siguiente mensaje debe detectar sesión expirada
+      const respuesta = await procesarMensaje(userId, '2');
+      expect(respuesta.action).toBe('session_expired');
+      expect(respuesta.text).toContain('sesión ha expirado');
+    });
+
+    it('no debe expirar sesión activa (menos de 30 minutos)', async () => {
+      const userId = '+5197777777';
+      navigationManager.userStates.delete(userId);
+      
+      // Crear una sesión
+      await procesarMensaje(userId, '1');
+      
+      // Simular que pasaron solo 5 minutos
+      const state = navigationManager.getUserState(userId);
+      state.lastActivity = Date.now() - (5 * 60 * 1000);
+      navigationManager.userStates.set(userId, state);
+      
+      // Siguiente mensaje debe funcionar normalmente
+      const respuesta = await procesarMensaje(userId, '2');
+      expect(respuesta.action).toBe('navigate');
+      expect(respuesta.text).toContain('PROCEDIMIENTOS');
+    });
+
+    it('debe permitir reiniciar sesión después de expiración', async () => {
+      const userId = '+5196666666';
+      navigationManager.userStates.delete(userId);
+      
+      // Crear una sesión
+      await procesarMensaje(userId, '1');
+      
+      // Simular que pasaron 31 minutos
+      const state = navigationManager.getUserState(userId);
+      state.lastActivity = Date.now() - (31 * 60 * 1000);
+      navigationManager.userStates.set(userId, state);
+      
+      // Primer mensaje después de expiración
+      const respuesta1 = await procesarMensaje(userId, '2');
+      expect(respuesta1.action).toBe('session_expired');
+      
+      // Segundo mensaje debe mostrar menú principal (sin error, primer mensaje "nuevo")
+      const respuesta2 = await procesarMensaje(userId, 'hola');
+      expect(respuesta2.text).toContain('¡Hola!');
+      expect(respuesta2.text).not.toContain('Opción no válida');
+    });
   });
 });

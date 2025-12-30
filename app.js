@@ -9,6 +9,8 @@ const twilio = require('twilio');
 const path = require('path');
 const { procesarMensaje } = require('./src/bot/messageRouter');
 const mediaService = require('./src/services/mediaService');
+const navigationManager = require('./src/bot/navigationManager');
+const sessionScheduler = require('./src/bot/sessionScheduler');
 const logger = require('./src/utils/logger');
 
 const app = express();
@@ -25,6 +27,9 @@ app.use('/media', express.static(path.join(__dirname, 'src/media')));
 const TWILIO_ACCOUNT_SID = process.env.TWILIO_ACCOUNT_SID;
 const TWILIO_AUTH_TOKEN = process.env.TWILIO_AUTH_TOKEN;
 const twilio_client = twilio(TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN);
+
+// Inicializar Session Scheduler
+sessionScheduler.init(twilio_client, navigationManager);
 
 /**
  * Health check
@@ -54,6 +59,19 @@ app.post('/webhook/messages', async (req, res) => {
 
     // Procesar el mensaje y obtener respuesta
     const respuesta = await procesarMensaje(phoneNumber, incoming_msg);
+
+    // Manejar sesión expirada
+    if (respuesta.action === 'session_expired') {
+      // Enviar mensaje de sesión expirada
+      await twilio_client.messages.create({
+        from: to,
+        to: from,
+        body: respuesta.text
+      });
+      logger.info(`Sesión expirada para ${from}`);
+      res.status(200).send('Message processed');
+      return;
+    }
 
     // Manejar diferentes tipos de acciones
     if (respuesta.action === 'send_video') {

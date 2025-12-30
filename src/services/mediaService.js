@@ -54,9 +54,11 @@ class MediaService {
       
       // Validar que el archivo existe
       if (!await this.fileExists(videoPath)) {
-        await client.sendMessage(chatId, 
-          `❌ *Video no disponible*\n\nLo sentimos, el video de *${proc.nombre}* no está disponible en este momento.\n\nPor favor contacta al administrador.`
-        );
+        await client.messages.create({
+          from: process.env.TWILIO_PHONE_NUMBER,
+          to: chatId,
+          body: `❌ *Video no disponible*\n\nLo sentimos, el video de *${proc.nombre}* no está disponible en este momento.\n\nPor favor contacta al administrador.`
+        });
         return {
           success: false,
           error: 'Archivo no encontrado'
@@ -68,9 +70,11 @@ class MediaService {
       
       // WhatsApp tiene límite de 16MB para videos
       if (fileSize > 16) {
-        await client.sendMessage(chatId,
-          `⚠️ *Video muy pesado*\n\nEl video pesa ${fileSize}MB y excede el límite de WhatsApp.\n\nPor favor solicita el video por otro medio o visita nuestra intranet.`
-        );
+        await client.messages.create({
+          from: process.env.TWILIO_PHONE_NUMBER,
+          to: chatId,
+          body: `⚠️ *Video muy pesado*\n\nEl video pesa ${fileSize}MB y excede el límite de WhatsApp.\n\nPor favor solicita el video por otro medio o visita nuestra intranet.`
+        });
         return {
           success: false,
           error: 'Archivo muy pesado'
@@ -78,19 +82,21 @@ class MediaService {
       }
 
       // Enviar mensaje de espera
-      await client.sendMessage(chatId,
-        `⏳ *Enviando video...*\n\n📹 ${proc.nombre}\n⏱️ Por favor espera, el video está siendo enviado...`
-      );
+      await client.messages.create({
+        from: process.env.TWILIO_PHONE_NUMBER,
+        to: chatId,
+        body: `⏳ *Enviando video...*\n\n📹 ${proc.nombre}\n⏱️ Por favor espera, el video está siendo enviado...`
+      });
 
-      // Leer el archivo
-      const media = await fs.promises.readFile(videoPath);
-      const base64Data = media.toString('base64');
-
-      // Enviar el video
-      await client.sendMessage(chatId, {
-        video: Buffer.from(base64Data, 'base64'),
-        caption: `📹 *${proc.nombre}*\n\n✅ Video tutorial enviado correctamente.\n\n💡 ¿Necesitas algo más?\nEscribe el número de opción o *menu* para volver.`,
-        mimetype: 'video/mp4'
+      // Para Twilio, necesitarías una URL pública del video
+      // Si tienes los videos en una carpeta local, necesitarías hostearlos en un servidor
+      // O alternativamente, enviar instrucciones al usuario
+      // Por ahora, enviar instrucción:
+      
+      await client.messages.create({
+        from: process.env.TWILIO_PHONE_NUMBER,
+        to: chatId,
+        body: `📹 *${proc.nombre}*\n\n⚠️ El video está disponible pero requiere una conexión directa.\n\n💡 Por favor, solicita el video por correo electrónico: soporte@empresa.com\n\n¿Hay algo más en lo que pueda ayudarte?`
       });
 
       return {
@@ -102,9 +108,11 @@ class MediaService {
     } catch (error) {
       console.error('Error enviando video:', error);
       
-      await client.sendMessage(chatId,
-        `❌ *Error al enviar video*\n\nHubo un problema al enviar el video. Por favor intenta nuevamente o contacta al administrador.`
-      );
+      await client.messages.create({
+        from: process.env.TWILIO_PHONE_NUMBER,
+        to: chatId,
+        body: `❌ *Error al enviar video*\n\nHubo un problema al enviar el video. Por favor intenta nuevamente o contacta al administrador.`
+      });
 
       return {
         success: false,
@@ -131,9 +139,11 @@ class MediaService {
       
       // Validar que el archivo existe
       if (!await this.fileExists(docPath)) {
-        await client.sendMessage(chatId,
-          `❌ *Documento no disponible*\n\nLo sentimos, el documento de *${proc.nombre}* no está disponible en este momento.\n\nPor favor contacta al administrador.`
-        );
+        await client.messages.create({
+          from: process.env.TWILIO_PHONE_NUMBER,
+          to: chatId,
+          body: `❌ *Documento no disponible*\n\nLo sentimos, el documento de *${proc.nombre}* no está disponible en este momento.\n\nPor favor contacta al administrador.`
+        });
         return {
           success: false,
           error: 'Archivo no encontrado'
@@ -144,20 +154,19 @@ class MediaService {
       const fileSize = await this.getFileSize(docPath);
 
       // Enviar mensaje de espera
-      await client.sendMessage(chatId,
-        `⏳ *Enviando documento...*\n\n📄 ${proc.nombre}\n⏱️ Por favor espera...`
-      );
+      await client.messages.create({
+        from: process.env.TWILIO_PHONE_NUMBER,
+        to: chatId,
+        body: `⏳ *Enviando documento...*\n\n📄 ${proc.nombre}\n⏱️ Por favor espera...`
+      });
 
-      // Leer el archivo
-      const media = await fs.promises.readFile(docPath);
-      const base64Data = media.toString('base64');
-
-      // Enviar el PDF
-      await client.sendMessage(chatId, {
-        document: Buffer.from(base64Data, 'base64'),
-        caption: `📄 *${proc.nombre}*\n\n✅ Documento enviado correctamente.\n\n💡 ¿Necesitas algo más?\nEscribe el número de opción o *menu* para volver.`,
-        mimetype: 'application/pdf',
-        fileName: `${proc.id}.pdf`
+      // Para Twilio, necesitarías una URL pública del documento
+      // Por ahora, enviar instrucción:
+      
+      await client.messages.create({
+        from: process.env.TWILIO_PHONE_NUMBER,
+        to: chatId,
+        body: `📄 *${proc.nombre}*\n\n⚠️ El documento está disponible pero requiere una conexión directa.\n\n💡 Por favor, solicita el documento por correo electrónico: soporte@empresa.com\n\n¿Hay algo más en lo que pueda ayudarte?`
       });
 
       return {
@@ -169,9 +178,11 @@ class MediaService {
     } catch (error) {
       console.error('Error enviando documento:', error);
       
-      await client.sendMessage(chatId,
-        `❌ *Error al enviar documento*\n\nHubo un problema al enviar el documento. Por favor intenta nuevamente o contacta al administrador.`
-      );
+      await client.messages.create({
+        from: process.env.TWILIO_PHONE_NUMBER,
+        to: chatId,
+        body: `❌ *Error al enviar documento*\n\nHubo un problema al enviar el documento. Por favor intenta nuevamente o contacta al administrador.`
+      });
 
       return {
         success: false,

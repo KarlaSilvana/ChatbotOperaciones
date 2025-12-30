@@ -1,4 +1,5 @@
 const menus = require('./menus');
+const sessionConfig = require('../config/sessionConfig');
 
 /**
  * Gestor de navegación entre menús
@@ -19,9 +20,28 @@ class NavigationManager {
         navigationStack: ['principal'],
         currentMenu: 'principal',
         context: {},
-        lastActivity: Date.now()
+        lastActivity: Date.now(),
+        isNewSession: true, // Indica si es el primer mensaje del usuario
+        sessionStartTime: Date.now(),
+        notifiedOfExpiration: false // Track si ya fue notificado de expiración automáticamente
+      });
+      return this.getUserState(userId);
+    }
+    
+    // Si la sesión expiró, reiniciar y marcar como primer mensaje de nueva sesión
+    if (this.isSessionExpired(userId)) {
+      this.userStates.set(userId, {
+        navigationStack: ['principal'],
+        currentMenu: 'principal',
+        context: {},
+        lastActivity: Date.now(),
+        isNewSession: true, // LA PRÓXIMA será como primer mensaje (nueva sesión)
+        sessionExpired: true, // Flag para enviar mensaje de sesión terminada
+        sessionStartTime: Date.now(),
+        notifiedOfExpiration: false // Resetear flag para nueva sesión
       });
     }
+    
     return this.getUserState(userId);
   }
 
@@ -30,6 +50,51 @@ class NavigationManager {
    */
   getUserState(userId) {
     return this.userStates.get(userId) || this.initUser(userId);
+  }
+
+  /**
+   * Verifica si la sesión de un usuario ha expirado (30 minutos de inactividad)
+   */
+  isSessionExpired(userId) {
+    const state = this.userStates.get(userId);
+    if (!state) return false;
+    
+    const TIMEOUT_MS = sessionConfig.getTimeoutMs();
+    const now = Date.now();
+    
+    return (now - state.lastActivity) > TIMEOUT_MS;
+  }
+
+  /**
+   * Obtiene e indica si la sesión fue expirada (y la marca como procesada)
+   */
+  getAndClearSessionExpiredFlag(userId) {
+    const state = this.userStates.get(userId);
+    if (!state) return false;
+    
+    const wasExpired = state.sessionExpired || false;
+    if (wasExpired && state.sessionExpired) {
+      state.sessionExpired = false; // Limpiar flag después de leerlo
+      this.userStates.set(userId, state);
+    }
+    
+    return wasExpired;
+  }
+
+  /**
+   * Obtiene e indica si es el primer mensaje del usuario
+   */
+  getAndClearNewSessionFlag(userId) {
+    const state = this.userStates.get(userId);
+    if (!state) return false;
+    
+    const isNew = state.isNewSession || false;
+    if (isNew) {
+      state.isNewSession = false; // Solo marcar como nuevo la primera vez
+      this.userStates.set(userId, state);
+    }
+    
+    return isNew;
   }
 
   /**
@@ -73,11 +138,14 @@ class NavigationManager {
    * Resetea al menú principal
    */
   reset(userId) {
+    const state = this.getUserState(userId);
     this.userStates.set(userId, {
       navigationStack: ['principal'],
       currentMenu: 'principal',
       context: {},
-      lastActivity: Date.now()
+      lastActivity: Date.now(),
+      isNewSession: state.isNewSession || false, // Mantener flag
+      sessionStartTime: Date.now()
     });
     
     return this.getCurrentMenu(userId);
@@ -226,6 +294,6 @@ const navigationManager = new NavigationManager();
 
 setInterval(() => {
   navigationManager.cleanInactiveUsers();
-}, 30 * 60 * 1000);
+}, sessionConfig.getCleanupIntervalMs());
 
 module.exports = navigationManager;

@@ -121,7 +121,13 @@ _Escribe el número de tu opción._`;
       id: 'formularios',
       text: `📝 *FORMULARIOS*
 
-Esta sección estará disponible próximamente.
+Por favor, selecciona el formulario que deseas completar:
+
+1️⃣ *Formulario de Derivados Canales*
+👉 https://forms.office.com/pages/responsepage.aspx?id=tAtDi4qVqUmuymK19TwNw5orTWtuFeFBp1ksf761BypUNzMwVUhGSlo4UTZST042SUwzMzFYWkk3My4u&route=shorturl
+
+2️⃣ *Formulario de Seguimiento de Derivados*
+👉 https://forms.office.com/pages/responsepage.aspx?id=tAtDi4qVqUmuymK19TwNw5orTWtuFeFBp1ksf761BypUNDRYWVc3WFE4QllaV1VWVTM5TjFHNDgxRy4u&route=shorturl
 
 🔙 Escribe *menu* para volver al inicio.`,
       opciones: {
