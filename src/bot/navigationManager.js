@@ -266,9 +266,14 @@ class NavigationManager {
         };
 
       case 'consulta_ia':
+        // Obtener nombre del procedimiento para contexto RAG
+        const procedimientoActual = menus.getProcedimiento(state.context.procedimientoActual);
+        const nombreProcedimiento = procedimientoActual ? procedimientoActual.nombre : 'Procedimiento';
+        
         return {
           action: 'start_consulta_ia',
           procedimientoId: state.context.procedimientoActual,
+          procedimientoNombre: nombreProcedimiento,
           message: '💬 *Modo Consulta Activado*\n\nEscribe tu pregunta sobre este procedimiento.\n\nEscribe *volver* para regresar al menú anterior.'
         };
 
