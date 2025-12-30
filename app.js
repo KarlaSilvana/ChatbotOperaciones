@@ -111,6 +111,14 @@ app.post('/webhook/messages', async (req, res) => {
           });
         }
         
+        // Enviar mensaje interactivo para continuar o salir
+        const continuarMessage = '💬 ¿Tienes otra consulta? Escribe tu pregunta o 0 para salir.';
+        await twilio_client.messages.create({
+          from: to,
+          to: from,
+          body: continuarMessage
+        });
+        
         // Log de éxito
         logger.success(`Respuesta IA enviada a ${from} (${messages.length} mensaje${messages.length > 1 ? 's' : ''}, modo: ${modoIA})`);
         

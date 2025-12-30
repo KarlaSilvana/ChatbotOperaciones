@@ -48,7 +48,21 @@ async function procesarMensaje(userId, mensaje) {
 
     // ⭐ NUEVO: Detectar si usuario está en modo IA
     const modoIA = navigationManager.getIAMode(userId);
+    
+    // Normalizar el mensaje
+    const mensajeNormalizado = mensaje.toLowerCase().trim();
+    
     if (modoIA) {
+      // Verificar si usuario quiere salir del modo IA (0)
+      if (mensajeNormalizado === '0') {
+        navigationManager.exitIAMode(userId);
+        const menu = navigationManager.getCurrentMenu(userId);
+        return {
+          text: '👋 Saliste del modo consulta.\n\n' + menu.text,
+          action: 'navigate'
+        };
+      }
+      
       // Usuario está en modo IA - retornar acción para que app.js llame a RAG
       return {
         text: mensaje,
@@ -60,9 +74,6 @@ async function procesarMensaje(userId, mensaje) {
     
     // Obtener si es primer mensaje del usuario
     const isFirstMessage = navigationManager.getAndClearNewSessionFlag(userId);
-    
-    // Normalizar el mensaje
-    const mensajeNormalizado = mensaje.toLowerCase().trim();
 
     // Comando para volver al menú principal
     if (mensajeNormalizado === 'menu' || mensajeNormalizado === 'menú') {
