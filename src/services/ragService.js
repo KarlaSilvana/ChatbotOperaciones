@@ -78,8 +78,8 @@ class RAGService {
    */
   async _makeRequest(payload) {
     try {
-      // Importar fetch dinámicamente (compatible con Node.js 18+)
-      const fetch = (await import('node-fetch')).default;
+      // fetch está disponible globalmente en Node.js 18+
+      // No requiere importación adicional
 
       // Configurar timeout
       const controller = new AbortController();
