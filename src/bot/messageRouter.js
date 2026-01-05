@@ -49,6 +49,9 @@ async function procesarMensaje(userId, mensaje) {
     // ⭐ NUEVO: Detectar si usuario está en modo IA
     const modoIA = navigationManager.getIAMode(userId);
     
+    // Detectar si usuario está en modo directorio
+    const modoDirectorio = navigationManager.isInDirectorioMode(userId);
+    
     // Normalizar el mensaje
     const mensajeNormalizado = mensaje.toLowerCase().trim();
     
@@ -69,6 +72,48 @@ async function procesarMensaje(userId, mensaje) {
         action: 'chat_ia_response',
         modoIA: modoIA,
         context: navigationManager.getIAContext(userId)
+      };
+    }
+
+    if (modoDirectorio) {
+      // Verificar si usuario quiere salir del directorio (0)
+      if (mensajeNormalizado === '0') {
+        navigationManager.exitDirectorio(userId);
+        const menu = navigationManager.getCurrentMenu(userId);
+        return {
+          text: '👋 Saliste del directorio.\n\n' + menu.text,
+          action: 'navigate'
+        };
+      }
+
+      // Usuario está en modo directorio - procesar búsqueda
+      return {
+        text: mensaje,
+        action: 'directorio_search',
+        query: mensaje
+      };
+    }
+
+    // ⭐ NUEVO: Detectar si usuario está en modo directorio
+    const enDirectorio = navigationManager.isInDirectorioMode(userId);
+
+    if (enDirectorio) {
+      // Verificar si usuario quiere salir del directorio (0)
+      if (mensajeNormalizado === '0') {
+        navigationManager.exitDirectorio(userId);
+        const menu = navigationManager.getCurrentMenu(userId);
+        return {
+          text: menu.text,
+          action: 'navigate'
+        };
+      }
+
+      // Usuario está en modo directorio - retornar acción para búsqueda
+      navigationManager.incrementDirectorioSearches(userId);
+      return {
+        text: mensaje,
+        action: 'directorio_search',
+        query: mensaje
       };
     }
     

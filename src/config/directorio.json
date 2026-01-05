@@ -1,0 +1,122 @@
+[
+  {
+    "nombreCompleto": "ALATA PAYE CARLOS EDUARDO",
+    "telefono": "958315121",
+    "cargo": "Coordinador de Operaciones",
+    "oficina": "Puno Sur – Of. Juliaca",
+    "region": "Puno Sur",
+    "establecimiento": ""
+  },
+  {
+    "nombreCompleto": "HANI VILCA EDUARDO ALFREDO",
+    "telefono": "968759397",
+    "cargo": "Ejecutivo de Servicios",
+    "oficina": "Puno Sur – Of. Juliaca",
+    "region": "Puno Sur",
+    "establecimiento": "EOB Lampa"
+  },
+  {
+    "nombreCompleto": "CONDORI MAMANI JESSICA MARIE",
+    "telefono": "987654321",
+    "cargo": "Ejecutivo de Ventas",
+    "oficina": "Arequipa – Of. Centro",
+    "region": "Arequipa",
+    "establecimiento": "Sucursal Principal"
+  },
+  {
+    "nombreCompleto": "QUISPE FLORES RAMON LUIS",
+    "telefono": "943215678",
+    "cargo": "Ejecutivo de Servicios",
+    "oficina": "Arequipa – Of. Centro",
+    "region": "Arequipa",
+    "establecimiento": "Sucursal Principal"
+  },
+  {
+    "nombreCompleto": "CCUNO LARICO MARIA ROSA",
+    "telefono": "976543210",
+    "cargo": "Ejecutivo de Servicios",
+    "oficina": "Cusco – Of. Plaza",
+    "region": "Cusco",
+    "establecimiento": "EOB Cusco"
+  },
+  {
+    "nombreCompleto": "MAMANI QUISPE JUAN CARLOS",
+    "telefono": "912345678",
+    "cargo": "Coordinador de Operaciones",
+    "oficina": "Tacna – Of. Tacna",
+    "region": "Tacna",
+    "establecimiento": ""
+  },
+  {
+    "nombreCompleto": "APAZA CONDORI CLAUDIA LUCIA",
+    "telefono": "965432109",
+    "cargo": "Ejecutivo de Servicios",
+    "oficina": "Puno Sur – Of. Juliaca",
+    "region": "Puno Sur",
+    "establecimiento": "EOB Huancané"
+  },
+  {
+    "nombreCompleto": "SUCA MAMANI JOSE ANTONIO",
+    "telefono": "954321876",
+    "cargo": "Ejecutivo de Ventas",
+    "oficina": "Tacna – Of. Tacna",
+    "region": "Tacna",
+    "establecimiento": "Sucursal Principal"
+  },
+  {
+    "nombreCompleto": "FLORES QUISPE SANDRA PATRICIA",
+    "telefono": "923456789",
+    "cargo": "Ejecutivo de Servicios",
+    "oficina": "Arequipa – Of. Centro",
+    "region": "Arequipa",
+    "establecimiento": "EOB Arequipa"
+  },
+  {
+    "nombreCompleto": "CCATCCA VILCA DIEGO RAFAEL",
+    "telefono": "987123456",
+    "cargo": "Ejecutivo de Ventas",
+    "oficina": "Cusco – Of. Plaza",
+    "region": "Cusco",
+    "establecimiento": "Sucursal Principal"
+  },
+  {
+    "nombreCompleto": "LARICO MAMANI BEATRIZ ELENA",
+    "telefono": "945123678",
+    "cargo": "Coordinador de Operaciones",
+    "oficina": "Puno Sur – Of. Juliaca",
+    "region": "Puno Sur",
+    "establecimiento": ""
+  },
+  {
+    "nombreCompleto": "CHOQUE SUCA MANUEL FRANCISCO",
+    "telefono": "912654789",
+    "cargo": "Ejecutivo de Servicios",
+    "oficina": "Arequipa – Of. Centro",
+    "region": "Arequipa",
+    "establecimiento": "EOB Molendo"
+  },
+  {
+    "nombreCompleto": "TAQUICHIRI FLORES ROXANA MAGDALENA",
+    "telefono": "976245813",
+    "cargo": "Ejecutivo de Ventas",
+    "oficina": "Tacna – Of. Tacna",
+    "region": "Tacna",
+    "establecimiento": "EOB Tacna"
+  },
+  {
+    "nombreCompleto": "VILCA CONDORI LUIS FERNANDO",
+    "telefono": "934567890",
+    "cargo": "Ejecutivo de Servicios",
+    "oficina": "Cusco – Of. Plaza",
+    "region": "Cusco",
+    "establecimiento": "EOB Sicuani"
+  },
+  {
+    "nombreCompleto": "MAMANI FLORES LORENA CRISTINA",
+    "telefono": "987456123",
+    "cargo": "Coordinador de Operaciones",
+    "oficina": "Puno Sur – Of. Juliaca",
+    "region": "Puno Sur",
+    "establecimiento": "Sucursal Azangaro"
+  }
+]

@@ -13,6 +13,9 @@ const navigationManager = require('./src/bot/navigationManager');
 const sessionScheduler = require('./src/bot/sessionScheduler');
 const ragService = require('./src/services/ragService');
 const MarkdownToWhatsApp = require('./src/services/markdownToWhatsApp');
+const directorioService = require('./src/services/directorioService');
+const DirectorioFormatter = require('./src/services/directorioFormatter');
+const DirectorioRouter = require('./src/bot/directorioRouter');
 const logger = require('./src/utils/logger');
 
 const app = express();
@@ -137,6 +140,73 @@ app.post('/webhook/messages', async (req, res) => {
         });
         
         res.status(500).send('RAG API error');
+        return;
+      }
+    }
+
+    // ⭐ NUEVO: Manejar búsqueda en directorio
+    if (respuesta.action === 'directorio_search') {
+      try {
+        // Realizar búsqueda
+        const busqueda = directorioService.buscar(respuesta.query);
+
+        // Caso 1: Sin resultados
+        if (busqueda.resultados.length === 0) {
+          const mensajeNoResultados = DirectorioRouter.getNoResultsMessage();
+          await twilio_client.messages.create({
+            from: to,
+            to: from,
+            body: mensajeNoResultados
+          });
+
+          logger.info(
+            `[DirectorioSearch] Sin resultados para: "${respuesta.query}" del usuario ${from}`
+          );
+          res.status(200).send('Message processed');
+          return;
+        }
+
+        // Caso 2: Con resultados
+        const contenidoResultados = DirectorioFormatter.formatearResultadosConEncabezado(
+          busqueda.resultados,
+          busqueda.totalEncontrados,
+          busqueda.hayMas
+        );
+
+        const mensajeFinal = DirectorioFormatter.formatearMensajeFinal(
+          contenidoResultados,
+          busqueda.hayMas
+        );
+
+        await twilio_client.messages.create({
+          from: to,
+          to: from,
+          body: mensajeFinal
+        });
+
+        logger.success(
+          `[DirectorioSearch] Búsqueda exitosa: "${respuesta.query}" → ` +
+          `${busqueda.resultados.length} resultado(s), ` +
+          `total encontrado: ${busqueda.totalEncontrados} para ${from}`
+        );
+
+        res.status(200).send('Message processed');
+        return;
+
+      } catch (dirError) {
+        logger.error('[DirectorioSearch] Error en búsqueda:', dirError);
+
+        const errorMessage =
+          '❌ Error en la búsqueda del directorio.\n' +
+          'Por favor intenta nuevamente o escribe 0 para volver al menú.';
+
+        await twilio_client.messages.create({
+          from: to,
+          to: from,
+          body: errorMessage
+        });
+
+        res.status(500).send('Directorio search error');
         return;
       }
     }

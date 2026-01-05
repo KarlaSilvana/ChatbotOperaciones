@@ -137,6 +137,23 @@ Por favor, selecciona el formulario que deseas completar:
   }
 
   /**
+   * Obtiene el menú del directorio telefónico
+   */
+  getMenuDirectorio() {
+    return {
+      id: 'directorio',
+      text: `📞 DIRECTORIO TELEFÓNICO CORPORATIVO
+👤 escribe el nombre, cargo u oficina de la persona
+para consultar su número corporativo. ✨
+
+🔙 0. Volver al Menú Principal 🏠`,
+      opciones: {
+        '0': 'volver'
+      }
+    };
+  }
+
+  /**
    * Obtiene información de un procedimiento por ID
    */
   getProcedimiento(procedimientoId) {

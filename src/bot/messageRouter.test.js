@@ -67,12 +67,14 @@ describe('MessageRouter - Navigation Integration', () => {
 
   it('debe mostrar directorio con opción 4', async () => {
     const respuesta = await procesarMensaje(testUserId, '4');
-    expect(respuesta.action).toBe('info');
+    expect(respuesta.action).toBe('navigate');
+    expect(respuesta.text).toContain('DIRECTORIO');
   });
 
   it('debe activar chat IA con opción 1', async () => {
     const respuesta = await procesarMensaje(testUserId, '1');
-    expect(respuesta.action).toBe('chat_ia_response');
+    expect(respuesta.action).toBe('navigate');
+    expect(respuesta.text).toContain('Asistente IA');
   });
 
   it('debe volver al menú con "menu"', async () => {
@@ -150,7 +152,8 @@ describe('MessageRouter - Navigation Integration', () => {
     
     // Segundo mensaje con opción válida "1"
     const valida = await procesarMensaje(testUserId, '1');
-    expect(valida.action).toBe('chat_ia_response');
+    expect(valida.action).toBe('navigate');
+    expect(valida.text).toContain('Asistente IA');
   });
 
   describe('Sesión Expirada (30 minutos)', () => {
@@ -184,9 +187,9 @@ describe('MessageRouter - Navigation Integration', () => {
       state.lastActivity = Date.now() - (5 * 60 * 1000);
       navigationManager.userStates.set(userId, state);
       
-      // Siguiente mensaje debe funcionar normalmente
-      const respuesta = await procesarMensaje(userId, '2');
-      expect(respuesta.action).toBe('navigate');
+      // Siguiente mensaje es una pregunta IA (usuario está en modo IA)
+      const respuesta = await procesarMensaje(userId, 'pregunta de prueba');
+      expect(respuesta.action).toBe('chat_ia_response');
     });
 
     it('debe permitir reiniciar sesión después de expiración', async () => {

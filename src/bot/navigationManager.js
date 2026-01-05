@@ -23,7 +23,9 @@ class NavigationManager {
           modoIA: null,  // 'chat' o 'consulta' si está en modo IA
           procedimientoId: null,  // ID del procedimiento si está en consulta
           procedimientoNombre: null,  // Nombre del procedimiento para contexto RAG
-          iaConversationMessages: []  // Historial de conversación con IA
+          iaConversationMessages: [],  // Historial de conversación con IA
+          directorioMode: false,  // Si está en modo directorio
+          directorioSearches: 0  // Contador de búsquedas en directorio
         },
         lastActivity: Date.now(),
         isNewSession: true,
@@ -42,7 +44,9 @@ class NavigationManager {
           modoIA: null,
           procedimientoId: null,
           procedimientoNombre: null,
-          iaConversationMessages: []
+          iaConversationMessages: [],
+          directorioMode: false,
+          directorioSearches: 0
         },
         lastActivity: Date.now(),
         isNewSession: true,
@@ -187,6 +191,9 @@ class NavigationManager {
       case 'formularios':
         return menus.getMenuFormularios();
       
+      case 'directorio':
+        return menus.getMenuDirectorio();
+      
       default:
         return menus.getMenuPrincipal();
     }
@@ -242,9 +249,10 @@ class NavigationManager {
         };
 
       case 'directorio':
+        this.startDirectorio(userId);
         return {
-          action: 'info',
-          message: '📞 *Directorio Telefónico*\n\nEsta sección estará disponible próximamente.\n\nEscribe *menu* para volver.'
+          action: 'navigate',
+          menu: menus.getMenuDirectorio()
         };
 
       case 'volver':
@@ -404,6 +412,61 @@ class NavigationManager {
     state.context.procedimientoId = null;
     state.context.procedimientoNombre = null;
     state.context.iaConversationMessages = [];
+    state.navigationStack = ['principal'];
+    state.currentMenu = 'principal';
+    this.userStates.set(userId, state);
+    return true;
+  }
+
+  /**
+   * Inicia modo directorio
+   * @param {string} userId - ID del usuario
+   */
+  startDirectorio(userId) {
+    const state = this.getUserState(userId);
+    if (!state) return false;
+
+    state.context.directorioMode = true;
+    state.context.directorioSearches = 0;
+    state.currentMenu = 'directorio';
+    state.navigationStack.push('directorio');
+    this.userStates.set(userId, state);
+    return true;
+  }
+
+  /**
+   * Obtiene el modo de directorio
+   * @param {string} userId - ID del usuario
+   * @returns {boolean}
+   */
+  isInDirectorioMode(userId) {
+    const state = this.getUserState(userId);
+    return state && state.context && state.context.directorioMode === true;
+  }
+
+  /**
+   * Incrementa contador de búsquedas en directorio
+   * @param {string} userId - ID del usuario
+   */
+  incrementDirectorioSearches(userId) {
+    const state = this.getUserState(userId);
+    if (!state) return 0;
+
+    state.context.directorioSearches = (state.context.directorioSearches || 0) + 1;
+    this.userStates.set(userId, state);
+    return state.context.directorioSearches;
+  }
+
+  /**
+   * Salir del modo directorio
+   * @param {string} userId - ID del usuario
+   */
+  exitDirectorio(userId) {
+    const state = this.getUserState(userId);
+    if (!state) return false;
+
+    state.context.directorioMode = false;
+    state.context.directorioSearches = 0;
     state.navigationStack = ['principal'];
     state.currentMenu = 'principal';
     this.userStates.set(userId, state);
