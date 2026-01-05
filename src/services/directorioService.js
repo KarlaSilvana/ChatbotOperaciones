@@ -28,7 +28,7 @@ class DirectorioService {
   }
 
   /**
-   * Busca en el directorio por criterio
+   * Busca en el directorio por criterio (búsqueda por palabras)
    * @param {string} query - Texto a buscar
    * @returns {Object} {resultados: [], totalEncontrados: number, hayMas: boolean}
    */
@@ -54,6 +54,9 @@ class DirectorioService {
     }
 
     try {
+      // Dividir la búsqueda en palabras individuales
+      const palabrasBusqueda = termino.split(/\s+/).filter(p => p.length > 0);
+
       // Buscar en los campos permitidos (SIN región)
       const coincidencias = this.directorio.filter(registro => {
         const nombreCompleto = (registro.nombreCompleto || '').toLowerCase();
@@ -62,13 +65,13 @@ class DirectorioService {
         const oficina = (registro.oficina || '').toLowerCase();
         const establecimiento = (registro.establecimiento || '').toLowerCase();
 
-        // Búsqueda parcial en cada campo (sin región)
-        return (
-          nombreCompleto.includes(termino) ||
-          telefono.includes(termino) ||
-          cargo.includes(termino) ||
-          oficina.includes(termino) ||
-          establecimiento.includes(termino)
+        // Buscar si ALGUNA palabra coincide en ALGUNO de los campos
+        return palabrasBusqueda.some(palabra =>
+          nombreCompleto.includes(palabra) ||
+          telefono.includes(palabra) ||
+          cargo.includes(palabra) ||
+          oficina.includes(palabra) ||
+          establecimiento.includes(palabra)
         );
       });
 

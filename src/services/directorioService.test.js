@@ -49,10 +49,12 @@ describe('DirectorioService', () => {
       }
     });
 
-    test('debería retornar hayMas=false si hay ≤5 resultados', () => {
-      const resultado = directorioService.buscar('ALATA PAYE CARLOS');
-      expect(resultado.resultados.length).toBeLessThanOrEqual(5);
-      expect(resultado.hayMas).toBe(false);
+    test('debería encontrar registros por múltiples palabras (búsqueda por palabras)', () => {
+      const resultado = directorioService.buscar('JHOVANNA HUISA');
+      // Debe encontrar porque ambas palabras están en nombreCompleto
+      expect(resultado.resultados.length).toBeGreaterThan(0);
+      expect(resultado.resultados[0].nombreCompleto.toUpperCase()).toContain('JHOVANNA');
+      expect(resultado.resultados[0].nombreCompleto.toUpperCase()).toContain('HUISA');
     });
 
     test('debería retornar resultados vacíos si no hay coincidencias', () => {
