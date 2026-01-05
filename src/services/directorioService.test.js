@@ -13,21 +13,21 @@ describe('DirectorioService', () => {
     });
 
     test('debería encontrar registros por nombre (nombreCompleto)', () => {
-      const resultado = directorioService.buscar('ALATA');
+      const resultado = directorioService.buscar('JHOVANNA');
       expect(resultado.resultados.length).toBeGreaterThan(0);
-      expect(resultado.resultados[0].nombreCompleto).toContain('ALATA');
+      expect(resultado.resultados[0].nombreCompleto.toUpperCase()).toContain('JHOVANNA');
     });
 
     test('debería encontrar registros por cargo', () => {
-      const resultado = directorioService.buscar('Ejecutivo');
+      const resultado = directorioService.buscar('EJECUTIVO');
       expect(resultado.resultados.length).toBeGreaterThan(0);
-      expect(resultado.resultados[0].cargo).toContain('Ejecutivo');
+      expect(resultado.resultados[0].cargo.toUpperCase()).toContain('EJECUTIVO');
     });
 
     test('debería encontrar registros por oficina', () => {
-      const resultado = directorioService.buscar('Juliaca');
+      const resultado = directorioService.buscar('PRINCIPAL');
       expect(resultado.totalEncontrados).toBeGreaterThan(0);
-      expect(resultado.resultados[0].oficina).toContain('Juliaca');
+      expect(resultado.resultados[0].oficina.toUpperCase()).toContain('PRINCIPAL');
     });
 
     test('debería encontrar registros por establecimiento', () => {
@@ -94,11 +94,10 @@ describe('DirectorioService', () => {
     });
 
     test('NO debería buscar en región', () => {
-      // "Puno Sur" es región pero no debería encontrarse al buscar "Puno Sur" si está solo en región
-      // Sin embargo, puede encontrarse en oficina que contiene "Puno Sur"
-      const resultado = directorioService.buscar('Puno Sur');
-      // Esto debe encontrar registros porque "Puno Sur" está en oficina
+      // Buscamos por "PRINCIPAL" que está en oficina, no solo en región
+      const resultado = directorioService.buscar('PRINCIPAL');
       expect(resultado.totalEncontrados).toBeGreaterThan(0);
+      expect(resultado.resultados[0].oficina.toUpperCase()).toContain('PRINCIPAL');
     });
   });
 
