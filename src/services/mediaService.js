@@ -33,9 +33,11 @@ class MediaService {
       }
 
       // Obtener URL firmada del S3
+      console.log(`🔗 Generando URL firmada para video: ${procedimientoId}`);
       const videoUrl = await this.s3Service.getVideoUrl(procedimientoId);
       
       if (!videoUrl) {
+        console.error(`❌ No se pudo generar URL para: ${procedimientoId}`);
         await client.messages.create({
           from: process.env.TWILIO_PHONE_NUMBER,
           to: chatId,
@@ -47,19 +49,23 @@ class MediaService {
         };
       }
 
-      // Enviar mensaje de espera
-      await client.messages.create({
-        from: process.env.TWILIO_PHONE_NUMBER,
-        to: chatId,
-        body: `⏳ *Enviando video...*\n\n📹 ${proc.nombre}\n⏱️ Por favor espera, el video está siendo enviado...`
-      });
+      console.log(`✅ URL generada correctamente para: ${procedimientoId}`);
 
-      // Enviar video desde URL de S3
+      // Enviar video desde URL de S3 (UN SOLO MENSAJE)
       await client.messages.create({
         from: process.env.TWILIO_PHONE_NUMBER,
         to: chatId,
         mediaUrl: [videoUrl],
-        body: `📹 *${proc.nombre}*\n\n✅ Aquí está el video solicitado. La URL es válida por 1 hora.\n\n¿Hay algo más en lo que pueda ayudarte?`
+        body: `📹 *${proc.nombre}*\n\n✅ Aquí está el video. La URL es válida por 1 hora.`
+      });
+
+      console.log(`✅ Video enviado a ${chatId} para procedimiento: ${procedimientoId}`);
+
+      // Mensaje de continuación
+      await client.messages.create({
+        from: process.env.TWILIO_PHONE_NUMBER,
+        to: chatId,
+        body: `¿Hay algo más en lo que pueda ayudarte?\n\nEscribe 0 para volver al menú principal.`
       });
 
       return {
@@ -69,13 +75,18 @@ class MediaService {
       };
 
     } catch (error) {
-      console.error('Error enviando video:', error);
+      console.error('❌ Error enviando video:', error);
+      console.error('Stack trace:', error.stack);
       
-      await client.messages.create({
-        from: process.env.TWILIO_PHONE_NUMBER,
-        to: chatId,
-        body: `❌ *Error al enviar video*\n\nHubo un problema al enviar el video. Por favor intenta nuevamente o contacta al administrador.`
-      });
+      try {
+        await client.messages.create({
+          from: process.env.TWILIO_PHONE_NUMBER,
+          to: chatId,
+          body: `❌ *Error al enviar video*\n\nHubo un problema al enviar el video. Por favor intenta nuevamente o contacta al administrador.`
+        });
+      } catch (sendError) {
+        console.error('Error enviando mensaje de error:', sendError);
+      }
 
       return {
         success: false,
@@ -102,9 +113,11 @@ class MediaService {
       }
 
       // Obtener URL firmada del S3
+      console.log(`🔗 Generando URL firmada para documento: ${procedimientoId}`);
       const docUrl = await this.s3Service.getDocumentoUrl(procedimientoId);
       
       if (!docUrl) {
+        console.error(`❌ No se pudo generar URL para documento: ${procedimientoId}`);
         await client.messages.create({
           from: process.env.TWILIO_PHONE_NUMBER,
           to: chatId,
@@ -116,19 +129,23 @@ class MediaService {
         };
       }
 
-      // Enviar mensaje de espera
-      await client.messages.create({
-        from: process.env.TWILIO_PHONE_NUMBER,
-        to: chatId,
-        body: `⏳ *Enviando documento...*\n\n📄 ${proc.nombre}\n⏱️ Por favor espera...`
-      });
+      console.log(`✅ URL de documento generada correctamente para: ${procedimientoId}`);
 
-      // Enviar documento desde URL de S3
+      // Enviar documento desde URL de S3 (UN SOLO MENSAJE)
       await client.messages.create({
         from: process.env.TWILIO_PHONE_NUMBER,
         to: chatId,
         mediaUrl: [docUrl],
-        body: `📄 *${proc.nombre}*\n\n✅ Aquí está el documento solicitado. La URL es válida por 1 hora.\n\n¿Hay algo más en lo que pueda ayudarte?`
+        body: `📄 *${proc.nombre}*\n\n✅ Aquí está el documento. La URL es válida por 1 hora.`
+      });
+
+      console.log(`✅ Documento enviado a ${chatId} para procedimiento: ${procedimientoId}`);
+
+      // Mensaje de continuación
+      await client.messages.create({
+        from: process.env.TWILIO_PHONE_NUMBER,
+        to: chatId,
+        body: `¿Hay algo más en lo que pueda ayudarte?\n\nEscribe 0 para volver al menú principal.`
       });
 
       return {
@@ -138,13 +155,18 @@ class MediaService {
       };
 
     } catch (error) {
-      console.error('Error enviando documento:', error);
+      console.error('❌ Error enviando documento:', error);
+      console.error('Stack trace:', error.stack);
       
-      await client.messages.create({
-        from: process.env.TWILIO_PHONE_NUMBER,
-        to: chatId,
-        body: `❌ *Error al enviar documento*\n\nHubo un problema al enviar el documento. Por favor intenta nuevamente o contacta al administrador.`
-      });
+      try {
+        await client.messages.create({
+          from: process.env.TWILIO_PHONE_NUMBER,
+          to: chatId,
+          body: `❌ *Error al enviar documento*\n\nHubo un problema al enviar el documento. Por favor intenta nuevamente o contacta al administrador.`
+        });
+      } catch (sendError) {
+        console.error('Error enviando mensaje de error:', sendError);
+      }
 
       return {
         success: false,
