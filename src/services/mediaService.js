@@ -6,9 +6,10 @@ const s3Service = require('./s3Service');
  * Videos y PDFs de procedimientos desde AWS S3
  * 
  * ✅ ACTUALIZADO A AWS S3:
- * - URLs firmadas con expiración de 1 hora
+ * - URLs públicas permanentes (sin expiración)
  * - Archivos almacenados en s3://chatbot-media-operaciones/procedimientos/{id}/
- * - Sin necesidad de credenciales (usa IAM Role de EC2)
+ * - Accesibles por Twilio para descargar y enviar por WhatsApp
+ * - Sin necesidad de credenciales (S3 público)
  */
 class MediaService {
   constructor() {
@@ -56,7 +57,7 @@ class MediaService {
         from: process.env.TWILIO_PHONE_NUMBER,
         to: chatId,
         mediaUrl: [videoUrl],
-        body: `📹 *${proc.nombre}*\n\n✅ Aquí está el video. La URL es válida por 1 hora.`
+        body: `📹 *${proc.nombre}*\n\n✅ Aquí está el video.`
       });
 
       console.log(`✅ Video enviado a ${chatId} para procedimiento: ${procedimientoId}`);
@@ -136,7 +137,7 @@ class MediaService {
         from: process.env.TWILIO_PHONE_NUMBER,
         to: chatId,
         mediaUrl: [docUrl],
-        body: `📄 *${proc.nombre}*\n\n✅ Aquí está el documento. La URL es válida por 1 hora.`
+        body: `📄 *${proc.nombre}*\n\n✅ Aquí está el documento.`
       });
 
       console.log(`✅ Documento enviado a ${chatId} para procedimiento: ${procedimientoId}`);
