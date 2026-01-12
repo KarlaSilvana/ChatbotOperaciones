@@ -54,3 +54,6 @@ temp/
 # Build artifacts
 dist/
 build/
+
+src/media
+media/

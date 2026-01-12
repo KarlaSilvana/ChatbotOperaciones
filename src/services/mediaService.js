@@ -1,43 +1,25 @@
-const fs = require('fs');
-const path = require('path');
 const menusConfig = require('../bot/menus');
+const s3Service = require('./s3Service');
 
 /**
  * Servicio para manejar envío de archivos multimedia
- * Videos y PDFs de procedimientos
+ * Videos y PDFs de procedimientos desde AWS S3
+ * 
+ * ✅ ACTUALIZADO A AWS S3:
+ * - URLs firmadas con expiración de 1 hora
+ * - Archivos almacenados en s3://chatbot-media-operaciones/procedimientos/{id}/
+ * - Sin necesidad de credenciales (usa IAM Role de EC2)
  */
-
 class MediaService {
   constructor() {
-    this.mediaPath = path.join(__dirname, '../media');
+    this.s3Service = s3Service;
   }
 
   /**
-   * Valida que un archivo existe
-   */
-  async fileExists(filePath) {
-    try {
-      await fs.promises.access(filePath, fs.constants.F_OK);
-      return true;
-    } catch {
-      return false;
-    }
-  }
-
-  /**
-   * Obtiene el tamaño de un archivo en MB
-   */
-  async getFileSize(filePath) {
-    try {
-      const stats = await fs.promises.stat(filePath);
-      return (stats.size / (1024 * 1024)).toFixed(2); // MB
-    } catch {
-      return null;
-    }
-  }
-
-  /**
-   * Envía un video de procedimiento
+   * Envía un video de procedimiento desde S3
+   * @param {Object} client - Cliente de Twilio
+   * @param {string} chatId - ID de chat de WhatsApp
+   * @param {string} procedimientoId - ID del procedimiento
    */
   async enviarVideo(client, chatId, procedimientoId) {
     try {
@@ -50,10 +32,10 @@ class MediaService {
         };
       }
 
-      const videoPath = path.join(this.mediaPath, proc.recursos.video);
+      // Obtener URL firmada del S3
+      const videoUrl = await this.s3Service.getVideoUrl(procedimientoId);
       
-      // Validar que el archivo existe
-      if (!await this.fileExists(videoPath)) {
+      if (!videoUrl) {
         await client.messages.create({
           from: process.env.TWILIO_PHONE_NUMBER,
           to: chatId,
@@ -61,23 +43,7 @@ class MediaService {
         });
         return {
           success: false,
-          error: 'Archivo no encontrado'
-        };
-      }
-
-      // Obtener tamaño del archivo
-      const fileSize = await this.getFileSize(videoPath);
-      
-      // WhatsApp tiene límite de 16MB para videos
-      if (fileSize > 16) {
-        await client.messages.create({
-          from: process.env.TWILIO_PHONE_NUMBER,
-          to: chatId,
-          body: `⚠️ *Video muy pesado*\n\nEl video pesa ${fileSize}MB y excede el límite de WhatsApp.\n\nPor favor solicita el video por otro medio o visita nuestra intranet.`
-        });
-        return {
-          success: false,
-          error: 'Archivo muy pesado'
+          error: 'URL de video no pudo ser generada'
         };
       }
 
@@ -88,21 +54,18 @@ class MediaService {
         body: `⏳ *Enviando video...*\n\n📹 ${proc.nombre}\n⏱️ Por favor espera, el video está siendo enviado...`
       });
 
-      // Para Twilio, necesitarías una URL pública del video
-      // Si tienes los videos en una carpeta local, necesitarías hostearlos en un servidor
-      // O alternativamente, enviar instrucciones al usuario
-      // Por ahora, enviar instrucción:
-      
+      // Enviar video desde URL de S3
       await client.messages.create({
         from: process.env.TWILIO_PHONE_NUMBER,
         to: chatId,
-        body: `📹 *${proc.nombre}*\n\n⚠️ El video está disponible pero requiere una conexión directa.\n\n💡 Por favor, solicita el video por correo electrónico: soporte@empresa.com\n\n¿Hay algo más en lo que pueda ayudarte?`
+        mediaUrl: [videoUrl],
+        body: `📹 *${proc.nombre}*\n\n✅ Aquí está el video solicitado. La URL es válida por 1 hora.\n\n¿Hay algo más en lo que pueda ayudarte?`
       });
 
       return {
         success: true,
-        fileName: proc.recursos.video,
-        fileSize: fileSize
+        fileName: `${procedimientoId}/video.mp4`,
+        source: 'AWS S3'
       };
 
     } catch (error) {
@@ -122,7 +85,10 @@ class MediaService {
   }
 
   /**
-   * Envía un documento PDF de procedimiento
+   * Envía un documento PDF de procedimiento desde S3
+   * @param {Object} client - Cliente de Twilio
+   * @param {string} chatId - ID de chat de WhatsApp
+   * @param {string} procedimientoId - ID del procedimiento
    */
   async enviarDocumento(client, chatId, procedimientoId) {
     try {
@@ -135,10 +101,10 @@ class MediaService {
         };
       }
 
-      const docPath = path.join(this.mediaPath, proc.recursos.documento);
+      // Obtener URL firmada del S3
+      const docUrl = await this.s3Service.getDocumentoUrl(procedimientoId);
       
-      // Validar que el archivo existe
-      if (!await this.fileExists(docPath)) {
+      if (!docUrl) {
         await client.messages.create({
           from: process.env.TWILIO_PHONE_NUMBER,
           to: chatId,
@@ -146,12 +112,9 @@ class MediaService {
         });
         return {
           success: false,
-          error: 'Archivo no encontrado'
+          error: 'URL de documento no pudo ser generada'
         };
       }
-
-      // Obtener tamaño del archivo
-      const fileSize = await this.getFileSize(docPath);
 
       // Enviar mensaje de espera
       await client.messages.create({
@@ -160,19 +123,18 @@ class MediaService {
         body: `⏳ *Enviando documento...*\n\n📄 ${proc.nombre}\n⏱️ Por favor espera...`
       });
 
-      // Para Twilio, necesitarías una URL pública del documento
-      // Por ahora, enviar instrucción:
-      
+      // Enviar documento desde URL de S3
       await client.messages.create({
         from: process.env.TWILIO_PHONE_NUMBER,
         to: chatId,
-        body: `📄 *${proc.nombre}*\n\n⚠️ El documento está disponible pero requiere una conexión directa.\n\n💡 Por favor, solicita el documento por correo electrónico: soporte@empresa.com\n\n¿Hay algo más en lo que pueda ayudarte?`
+        mediaUrl: [docUrl],
+        body: `📄 *${proc.nombre}*\n\n✅ Aquí está el documento solicitado. La URL es válida por 1 hora.\n\n¿Hay algo más en lo que pueda ayudarte?`
       });
 
       return {
         success: true,
-        fileName: proc.recursos.documento,
-        fileSize: fileSize
+        fileName: `${procedimientoId}/documento.pdf`,
+        source: 'AWS S3'
       };
 
     } catch (error) {
@@ -192,50 +154,10 @@ class MediaService {
   }
 
   /**
-   * Obtiene información de los archivos disponibles
+   * Obtiene información de estado del servicio S3
    */
-  async getMediaInfo() {
-    const info = {
-      procedimientos: [],
-      totalVideos: 0,
-      totalDocumentos: 0,
-      errors: []
-    };
-
-    for (const proc of menusConfig.procedimientos) {
-      const videoPath = path.join(this.mediaPath, proc.recursos.video);
-      const docPath = path.join(this.mediaPath, proc.recursos.documento);
-
-      const videoExists = await this.fileExists(videoPath);
-      const docExists = await this.fileExists(docPath);
-
-      info.procedimientos.push({
-        id: proc.id,
-        nombre: proc.nombre,
-        video: {
-          exists: videoExists,
-          path: proc.recursos.video,
-          size: videoExists ? await this.getFileSize(videoPath) : null
-        },
-        documento: {
-          exists: docExists,
-          path: proc.recursos.documento,
-          size: docExists ? await this.getFileSize(docPath) : null
-        }
-      });
-
-      if (videoExists) info.totalVideos++;
-      if (docExists) info.totalDocumentos++;
-
-      if (!videoExists) {
-        info.errors.push(`Video faltante: ${proc.nombre}`);
-      }
-      if (!docExists) {
-        info.errors.push(`Documento faltante: ${proc.nombre}`);
-      }
-    }
-
-    return info;
+  getS3Info() {
+    return this.s3Service.getInfo();
   }
 }
 

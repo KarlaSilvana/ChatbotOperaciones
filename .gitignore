@@ -15,3 +15,7 @@ pids/
 *.pid
 ssh/
 docs/
+media/
+
+# AWS S3 - Archivos multimedia ignorados (ahora en S3)
+src/media/

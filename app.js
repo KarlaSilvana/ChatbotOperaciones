@@ -1,14 +1,10 @@
-/**
- * Chatbot con Twilio - Menú Dinámico con Navegación
- * Servidor Express que recibe mensajes de Twilio WhatsApp
- */
-
 require('dotenv').config();
 const express = require('express');
 const twilio = require('twilio');
 const path = require('path');
 const { procesarMensaje } = require('./src/bot/messageRouter');
 const mediaService = require('./src/services/mediaService');
+const s3Service = require('./src/services/s3Service');
 const navigationManager = require('./src/bot/navigationManager');
 const sessionScheduler = require('./src/bot/sessionScheduler');
 const ragService = require('./src/services/ragService');
@@ -25,8 +21,8 @@ const port = process.env.PORT || 5000;
 app.use(express.urlencoded({ extended: false }));
 app.use(express.json());
 
-// Servir archivos multimedia estáticos
-app.use('/media', express.static(path.join(__dirname, 'src/media')));
+// NOTA: src/media ya no se sirve localmente (archivos en AWS S3)
+// app.use('/media', express.static(path.join(__dirname, 'src/media'))); // ❌ DEPRECATED
 
 // Variables de Twilio
 const TWILIO_ACCOUNT_SID = process.env.TWILIO_ACCOUNT_SID;
@@ -37,13 +33,14 @@ const twilio_client = twilio(TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN);
 sessionScheduler.init(twilio_client, navigationManager);
 
 /**
- * Health check
+ * Health check + S3 Status
  */
 app.get('/health', (req, res) => {
   res.json({ 
     status: 'OK', 
     timestamp: new Date(),
-    service: 'AndyBot - Caja Los Andes'
+    service: 'AndyBot - Caja Los Andes',
+    multimedia: s3Service.getInfo()
   });
 });
 
