@@ -1,9 +1,10 @@
-const { S3Client } = require("@aws-sdk/client-s3");
+const { S3Client, GetObjectCommand } = require('@aws-sdk/client-s3');
+const { getSignedUrl } = require('@aws-sdk/s3-request-presigner');
 
 /**
- * Servicio para generar URLs públicas de archivos en AWS S3
- * URLs son permanentes y accesibles por Twilio
- * Requiere: S3 Bucket con acceso público habilitado
+ * Servicio para generar URLs firmadas temporales de archivos en AWS S3
+ * URLs expiran en 1 hora por seguridad
+ * Compatible con S3 buckets privados
  */
 class S3Service {
   constructor() {
@@ -12,23 +13,30 @@ class S3Service {
     });
     this.bucketName = process.env.S3_BUCKET_NAME || "chatbot-media-operaciones";
     this.region = process.env.AWS_REGION || "us-east-1";
+    this.urlExpiration = 3600; // 1 hora
   }
 
   /**
-   * Genera URL PÚBLICA (permanente) para video de procedimiento
-   * ⚠️ NOTA: Requiere que los archivos en S3 sean públicos
-   * @param {string} procedimientoId - ID del procedimiento (ej: "firma_electronica")
-   * @returns {string} - URL pública del archivo
+   * Genera URL firmada temporal para video
+   * @param {string} procedimientoId - ID del procedimiento
+   * @returns {Promise<string>} URL firmada válida por 1 hora
    */
   async getVideoUrl(procedimientoId) {
     try {
       const key = `procedimientos/${procedimientoId}/video.mp4`;
       
-      // URL pública permanente (sin firma)
-      // Requiere: Block public access = OFF en S3
-      const url = `https://${this.bucketName}.s3.${process.env.AWS_REGION || 'us-east-1'}.amazonaws.com/${key}`;
+      console.log(`🔗 Generando URL firmada para video: ${key}`);
       
-      console.log(`✅ URL pública generada para ${procedimientoId}: ${url}`);
+      const command = new GetObjectCommand({
+        Bucket: this.bucketName,
+        Key: key
+      });
+
+      const url = await getSignedUrl(this.s3Client, command, {
+        expiresIn: this.urlExpiration
+      });
+      
+      console.log(`✅ URL firmada generada (expira en ${this.urlExpiration}s)`);
       return url;
     } catch (error) {
       console.error(`❌ Error generando URL para video ${procedimientoId}:`, error);
@@ -37,20 +45,26 @@ class S3Service {
   }
 
   /**
-   * Genera URL PÚBLICA (permanente) para documento PDF de procedimiento
-   * ⚠️ NOTA: Requiere que los archivos en S3 sean públicos
-   * @param {string} procedimientoId - ID del procedimiento (ej: "firma_electronica")
-   * @returns {string} - URL pública del archivo
+   * Genera URL firmada temporal para documento PDF
+   * @param {string} procedimientoId - ID del procedimiento
+   * @returns {Promise<string>} URL firmada válida por 1 hora
    */
   async getDocumentoUrl(procedimientoId) {
     try {
       const key = `procedimientos/${procedimientoId}/documento.pdf`;
       
-      // URL pública permanente (sin firma)
-      // Requiere: Block public access = OFF en S3
-      const url = `https://${this.bucketName}.s3.${process.env.AWS_REGION || 'us-east-1'}.amazonaws.com/${key}`;
+      console.log(`🔗 Generando URL firmada para documento: ${key}`);
       
-      console.log(`✅ URL pública generada para documento ${procedimientoId}: ${url}`);
+      const command = new GetObjectCommand({
+        Bucket: this.bucketName,
+        Key: key
+      });
+
+      const url = await getSignedUrl(this.s3Client, command, {
+        expiresIn: this.urlExpiration
+      });
+      
+      console.log(`✅ URL firmada de documento generada (expira en ${this.urlExpiration}s)`);
       return url;
     } catch (error) {
       console.error(`❌ Error generando URL para documento ${procedimientoId}:`, error);
@@ -59,26 +73,14 @@ class S3Service {
   }
 
   /**
-   * Verifica si un archivo existe en S3
-   * @param {string} key - Ruta completa del archivo en S3
-   * @returns {Promise<boolean>}
-   */
-  async fileExists(key) {
-    // Para URLs públicas, no necesitamos verificar existencia en el cliente
-    // S3 devolverá 404 si no existe
-    console.log(`📄 Archivo: ${key}`);
-    return true;
-  }
-
-  /**
    * Retorna información del servicio S3
-   * @returns {Object} - Info de configuración
    */
   getInfo() {
     return {
       bucket: this.bucketName,
       region: this.region,
-      urlType: 'public-permanent',
+      urlType: 'presigned-temporary',
+      expiresIn: `${this.urlExpiration}s`,
       status: 'ready'
     };
   }
