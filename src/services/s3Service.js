@@ -1,6 +1,8 @@
 const { S3Client, GetObjectCommand } = require('@aws-sdk/client-s3');
 const { getSignedUrl } = require('@aws-sdk/s3-request-presigner');
 
+const TinyURL = require('tinyurl');
+
 /**
  * Servicio para generar URLs firmadas temporales de archivos en AWS S3
  * URLs expiran en 1 hora por seguridad
@@ -22,27 +24,28 @@ class S3Service {
    * @returns {Promise<string>} URL firmada válida por 1 hora
    */
   async getVideoUrl(procedimientoId) {
-    try {
-      const key = `procedimientos/${procedimientoId}/video.mp4`;
-      
-      console.log(`🔗 Generando URL firmada para video: ${key}`);
-      
-      const command = new GetObjectCommand({
-        Bucket: this.bucketName,
-        Key: key
-      });
+  try {
+    const key = `procedimientos/${procedimientoId}/video.mp4`;
+    
+    const command = new GetObjectCommand({
+      Bucket: this.bucketName,
+      Key: key
+    });
 
-      const url = await getSignedUrl(this.s3Client, command, {
-        expiresIn: this.urlExpiration
-      });
-      
-      console.log(`✅ URL firmada generada (expira en ${this.urlExpiration}s)`);
-      return url;
-    } catch (error) {
-      console.error(`❌ Error generando URL para video ${procedimientoId}:`, error);
-      return null;
-    }
+    const longUrl = await getSignedUrl(this.s3Client, command, {
+      expiresIn: this.urlExpiration
+    });
+    
+    // Acortar URL
+    const shortUrl = await TinyURL.shorten(longUrl);
+    
+    console.log(`✅ URL acortada: ${shortUrl}`);
+    return shortUrl;
+  } catch (error) {
+    console.error(`❌ Error:`, error);
+    return null;
   }
+}
 
   /**
    * Genera URL firmada temporal para documento PDF
