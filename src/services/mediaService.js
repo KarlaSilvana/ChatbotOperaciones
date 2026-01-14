@@ -96,19 +96,23 @@ async enviarDocumento(client, chatId, procedimientoId) {
 
     // Mensaje 2: PDF
     if (docUrl) {
+      const pdfMessage = `📋 PDF:\n${docUrl}`;
+      console.log(`📊 Mensaje PDF - Longitud: ${pdfMessage.length} caracteres`);
       await client.messages.create({
         from: process.env.TWILIO_PHONE_NUMBER,
         to: chatId,
-        body: `📋 PDF:\n${docUrl}`
+        body: pdfMessage
       });
     }
 
     // Mensaje 3: Flyer
     if (flyerUrl) {
+      const flyerMessage = `📰 Flyer:\n${flyerUrl}`;
+      console.log(`📊 Mensaje Flyer - Longitud: ${flyerMessage.length} caracteres`);
       await client.messages.create({
         from: process.env.TWILIO_PHONE_NUMBER,
         to: chatId,
-        body: `📰 Flyer:\n${flyerUrl}`
+        body: flyerMessage
       });
     }
 

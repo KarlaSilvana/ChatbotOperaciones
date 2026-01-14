@@ -36,10 +36,20 @@ class S3Service {
       expiresIn: this.urlExpiration
     });
     
-    // Acortar URL
-    const shortUrl = await TinyURL.shorten(longUrl);
+    console.log(`📝 URL de video generada (longitud: ${longUrl.length} caracteres)`);
     
-    console.log(`✅ URL acortada: ${shortUrl}`);
+    // Acortar URL
+    let shortUrl = longUrl; // Fallback a URL original
+    try {
+      shortUrl = await TinyURL.shorten(longUrl);
+      if (shortUrl) {
+        console.log(`✅ URL acortada: ${shortUrl} (longitud: ${shortUrl.length} caracteres)`);
+      } else {
+        console.warn(`⚠️  TinyURL retornó null, usando URL original`);
+      }
+    } catch (shortenError) {
+      console.error(`⚠️  Error acortando URL con TinyURL:`, shortenError.message);
+    }
     return shortUrl;
   } catch (error) {
     console.error(`❌ Error:`, error);
@@ -67,10 +77,20 @@ class S3Service {
         expiresIn: this.urlExpiration
       });
       
-      // Acortar URL
-      const shortUrl = await TinyURL.shorten(longUrl);
+      console.log(`📝 URL de documento generada (longitud: ${longUrl.length} caracteres)`);
       
-      console.log(`✅ URL acortada de documento generada: ${shortUrl}`);
+      // Acortar URL
+      let shortUrl = longUrl; // Fallback a URL original
+      try {
+        shortUrl = await TinyURL.shorten(longUrl);
+        if (shortUrl) {
+          console.log(`✅ URL acortada de documento: ${shortUrl} (longitud: ${shortUrl.length} caracteres)`);
+        } else {
+          console.warn(`⚠️  TinyURL retornó null para documento, usando URL original`);
+        }
+      } catch (shortenError) {
+        console.error(`⚠️  Error acortando URL con TinyURL:`, shortenError.message);
+      }
       return shortUrl;
     } catch (error) {
       console.error(`❌ Error generando URL para documento ${procedimientoId}:`, error);
@@ -98,10 +118,20 @@ class S3Service {
         expiresIn: this.urlExpiration
       });
       
-      // Acortar URL
-      const shortUrl = await TinyURL.shorten(longUrl);
+      console.log(`📝 URL de flyer generada (longitud: ${longUrl.length} caracteres)`);
       
-      console.log(`✅ URL acortada de flyer generada: ${shortUrl}`);
+      // Acortar URL
+      let shortUrl = longUrl; // Fallback a URL original
+      try {
+        shortUrl = await TinyURL.shorten(longUrl);
+        if (shortUrl) {
+          console.log(`✅ URL acortada de flyer: ${shortUrl} (longitud: ${shortUrl.length} caracteres)`);
+        } else {
+          console.warn(`⚠️  TinyURL retornó null para flyer, usando URL original`);
+        }
+      } catch (shortenError) {
+        console.error(`⚠️  Error acortando URL con TinyURL:`, shortenError.message);
+      }
       return shortUrl;
     } catch (error) {
       console.error(`❌ Error generando URL para flyer ${procedimientoId}:`, error);
