@@ -213,7 +213,7 @@ app.post('/webhook/messages', async (req, res) => {
       const resultado = await mediaService.enviarVideo(twilio_client, from, respuesta.procedimientoId);
       
       if (!resultado.success) {
-        logger.warn(`No se pudo enviar video: ${resultado.error}`);
+        logger.warning(`No se pudo enviar video: ${resultado.error}`);
       } else {
         logger.success(`Video enviado a ${from}: ${resultado.fileName}`);
       }
@@ -222,7 +222,7 @@ app.post('/webhook/messages', async (req, res) => {
       const resultado = await mediaService.enviarDocumento(twilio_client, from, respuesta.procedimientoId);
       
       if (!resultado.success) {
-        logger.warn(`No se pudo enviar documento: ${resultado.error}`);
+        logger.warning(`No se pudo enviar documento: ${resultado.error}`);
       } else {
         logger.success(`Documento enviado a ${from}: ${resultado.fileName}`);
       }

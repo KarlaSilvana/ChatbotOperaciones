@@ -87,24 +87,36 @@ async enviarDocumento(client, chatId, procedimientoId) {
 
     console.log(`✅ URLs de documentos generadas, enviando...`);
 
-    // Construir mensaje con PDF y/o Flyer
-    let bodyMessage = `📄 *${proc.nombre}*\n\n`;
-    
-    if (docUrl) {
-      bodyMessage += `📋 PDF: ${docUrl}\n`;
-    }
-    
-    if (flyerUrl) {
-      bodyMessage += `📰 Flyer: ${flyerUrl}\n`;
-    }
-    
-    bodyMessage += `\n🔙 *0.* Volver`;
-
-    // Enviar mensaje con documentos y opción para regresar
+    // Mensaje 1: Encabezado con nombre del procedimiento
     await client.messages.create({
       from: process.env.TWILIO_PHONE_NUMBER,
       to: chatId,
-      body: bodyMessage
+      body: `📄 *${proc.nombre}*`
+    });
+
+    // Mensaje 2: PDF
+    if (docUrl) {
+      await client.messages.create({
+        from: process.env.TWILIO_PHONE_NUMBER,
+        to: chatId,
+        body: `📋 PDF:\n${docUrl}`
+      });
+    }
+
+    // Mensaje 3: Flyer
+    if (flyerUrl) {
+      await client.messages.create({
+        from: process.env.TWILIO_PHONE_NUMBER,
+        to: chatId,
+        body: `📰 Flyer:\n${flyerUrl}`
+      });
+    }
+
+    // Mensaje 4: Opción para regresar
+    await client.messages.create({
+      from: process.env.TWILIO_PHONE_NUMBER,
+      to: chatId,
+      body: `🔙 *0.* Volver`
     });
 
     console.log(`✅ Documentos enviados a ${chatId}: ${procedimientoId}`);
@@ -112,7 +124,7 @@ async enviarDocumento(client, chatId, procedimientoId) {
     return {
       success: true,
       fileName: `${procedimientoId}/documento.pdf`,
-      files: docUrl ? 1 : 0 + flyerUrl ? 1 : 0,
+      files: (docUrl ? 1 : 0) + (flyerUrl ? 1 : 0),
       source: 'AWS S3'
     };
 
