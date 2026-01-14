@@ -29,11 +29,18 @@ class MediaService {
 
     console.log(`✅ URL generada, enviando a usuario...`);
 
-    // MENSAJE CON VIDEO Y OPCIÓN PARA REGRESAR
+    // Mensaje 1: Contenido del video
     await client.messages.create({
       from: process.env.TWILIO_PHONE_NUMBER,
       to: chatId,
-      body: `📹 *${proc.nombre}*\n\n${videoUrl}\n\n🔙 *0.* Volver`
+      body: `Aquí tienes el video 📹 de *${proc.nombre}*`
+    });
+
+    // Mensaje 2: URL del video
+    await client.messages.create({
+      from: process.env.TWILIO_PHONE_NUMBER,
+      to: chatId,
+      body: videoUrl
     });
 
     console.log(`✅ Video enviado a ${chatId}: ${procedimientoId}`);
@@ -41,7 +48,8 @@ class MediaService {
     return {
       success: true,
       fileName: `${procedimientoId}/video.mp4`,
-      source: 'AWS S3'
+      source: 'AWS S3',
+      procedimientoId: procedimientoId
     };
 
   } catch (error) {
@@ -69,67 +77,46 @@ async enviarDocumento(client, chatId, procedimientoId) {
       return { success: false, error: 'Procedimiento no encontrado' };
     }
 
-    console.log(`🔗 Solicitando URLs acortadas para documento y flyer: ${procedimientoId}`);
+    console.log(`🔗 Solicitando URL acortada para documento: ${procedimientoId}`);
     
-    // Obtener URLs acortadas para PDF y Flyer
+    // Obtener URL acortada para PDF
     const docUrl = await this.s3Service.getDocumentoUrl(procedimientoId);
-    const flyerUrl = await this.s3Service.getFlyerUrl(procedimientoId);
     
-    if (!docUrl && !flyerUrl) {
-      console.error(`❌ No se pudieron generar URLs para documentos: ${procedimientoId}`);
+    if (!docUrl) {
+      console.error(`❌ No se pudo generar URL para documento: ${procedimientoId}`);
       await client.messages.create({
         from: process.env.TWILIO_PHONE_NUMBER,
         to: chatId,
-        body: `❌ Documentos no disponibles para *${proc.nombre}*`
+        body: `❌ Documento no disponible para *${proc.nombre}*`
       });
-      return { success: false, error: 'URLs no generadas' };
+      return { success: false, error: 'URL no generada' };
     }
 
-    console.log(`✅ URLs de documentos generadas, enviando...`);
+    console.log(`✅ URL de documento generada, enviando...`);
 
-    // Mensaje 1: Encabezado con nombre del procedimiento
+    // Mensaje 1: Contenido del documento
     await client.messages.create({
       from: process.env.TWILIO_PHONE_NUMBER,
       to: chatId,
-      body: `📄 *${proc.nombre}*`
+      body: `Aquí tienes el documento 📄 de *${proc.nombre}*`
     });
 
-    // Mensaje 2: PDF
-    if (docUrl) {
-      const pdfMessage = `📋 PDF:\n${docUrl}`;
-      console.log(`📊 Mensaje PDF - Longitud: ${pdfMessage.length} caracteres`);
-      await client.messages.create({
-        from: process.env.TWILIO_PHONE_NUMBER,
-        to: chatId,
-        body: pdfMessage
-      });
-    }
-
-    // Mensaje 3: Flyer
-    if (flyerUrl) {
-      const flyerMessage = `📰 Flyer:\n${flyerUrl}`;
-      console.log(`📊 Mensaje Flyer - Longitud: ${flyerMessage.length} caracteres`);
-      await client.messages.create({
-        from: process.env.TWILIO_PHONE_NUMBER,
-        to: chatId,
-        body: flyerMessage
-      });
-    }
-
-    // Mensaje 4: Opción para regresar
+    // Mensaje 2: URL del documento
+    const pdfMessage = docUrl;
+    console.log(`📊 Mensaje PDF - Longitud: ${pdfMessage.length} caracteres`);
     await client.messages.create({
       from: process.env.TWILIO_PHONE_NUMBER,
       to: chatId,
-      body: `🔙 *0.* Volver`
+      body: pdfMessage
     });
 
-    console.log(`✅ Documentos enviados a ${chatId}: ${procedimientoId}`);
+    console.log(`✅ Documento enviado a ${chatId}: ${procedimientoId}`);
 
     return {
       success: true,
       fileName: `${procedimientoId}/documento.pdf`,
-      files: (docUrl ? 1 : 0) + (flyerUrl ? 1 : 0),
-      source: 'AWS S3'
+      source: 'AWS S3',
+      procedimientoId: procedimientoId
     };
 
   } catch (error) {
@@ -139,7 +126,7 @@ async enviarDocumento(client, chatId, procedimientoId) {
       await client.messages.create({
         from: process.env.TWILIO_PHONE_NUMBER,
         to: chatId,
-        body: `❌ Error al enviar documentos`
+        body: `❌ Error al enviar documento`
       });
     } catch (sendError) {
       console.error('Error enviando mensaje de error:', sendError);

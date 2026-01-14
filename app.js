@@ -12,6 +12,7 @@ const MarkdownToWhatsApp = require('./src/services/markdownToWhatsApp');
 const directorioService = require('./src/services/directorioService');
 const DirectorioFormatter = require('./src/services/directorioFormatter');
 const DirectorioRouter = require('./src/bot/directorioRouter');
+const menus = require('./src/bot/menus');
 const logger = require('./src/utils/logger');
 
 const app = express();
@@ -216,6 +217,17 @@ app.post('/webhook/messages', async (req, res) => {
         logger.warning(`No se pudo enviar video: ${resultado.error}`);
       } else {
         logger.success(`Video enviado a ${from}: ${resultado.fileName}`);
+        
+        // Enviar automáticamente el menú del procedimiento nuevamente
+        const menuDetalle = menus.getMenuDetalleProcedimiento(resultado.procedimientoId);
+        if (menuDetalle) {
+          await twilio_client.messages.create({
+            from: process.env.TWILIO_PHONE_NUMBER,
+            to: from,
+            body: menuDetalle.text
+          });
+          logger.success(`Menú del procedimiento reenviado a ${from}`);
+        }
       }
     } else if (respuesta.action === 'send_documento') {
       // Enviar documento del procedimiento
@@ -225,6 +237,17 @@ app.post('/webhook/messages', async (req, res) => {
         logger.warning(`No se pudo enviar documento: ${resultado.error}`);
       } else {
         logger.success(`Documento enviado a ${from}: ${resultado.fileName}`);
+        
+        // Enviar automáticamente el menú del procedimiento nuevamente
+        const menuDetalle = menus.getMenuDetalleProcedimiento(resultado.procedimientoId);
+        if (menuDetalle) {
+          await twilio_client.messages.create({
+            from: process.env.TWILIO_PHONE_NUMBER,
+            to: from,
+            body: menuDetalle.text
+          });
+          logger.success(`Menú del procedimiento reenviado a ${from}`);
+        }
       }
     } else {
       // Enviar mensaje de texto normal

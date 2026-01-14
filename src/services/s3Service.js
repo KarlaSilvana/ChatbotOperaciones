@@ -99,47 +99,6 @@ class S3Service {
   }
 
   /**
-   * Genera URL acortada temporal para flyer informativo
-   * @param {string} procedimientoId - ID del procedimiento
-   * @returns {Promise<string>} URL acortada válida por 1 hora
-   */
-  async getFlyerUrl(procedimientoId) {
-    try {
-      const key = `procedimientos/${procedimientoId}/flyer.pdf`;
-      
-      console.log(`🔗 Generando URL firmada para flyer: ${key}`);
-      
-      const command = new GetObjectCommand({
-        Bucket: this.bucketName,
-        Key: key
-      });
-
-      const longUrl = await getSignedUrl(this.s3Client, command, {
-        expiresIn: this.urlExpiration
-      });
-      
-      console.log(`📝 URL de flyer generada (longitud: ${longUrl.length} caracteres)`);
-      
-      // Acortar URL
-      let shortUrl = longUrl; // Fallback a URL original
-      try {
-        shortUrl = await TinyURL.shorten(longUrl);
-        if (shortUrl) {
-          console.log(`✅ URL acortada de flyer: ${shortUrl} (longitud: ${shortUrl.length} caracteres)`);
-        } else {
-          console.warn(`⚠️  TinyURL retornó null para flyer, usando URL original`);
-        }
-      } catch (shortenError) {
-        console.error(`⚠️  Error acortando URL con TinyURL:`, shortenError.message);
-      }
-      return shortUrl;
-    } catch (error) {
-      console.error(`❌ Error generando URL para flyer ${procedimientoId}:`, error);
-      return null;
-    }
-  }
-
-  /**
    * Retorna información del servicio S3
    */
   getInfo() {
