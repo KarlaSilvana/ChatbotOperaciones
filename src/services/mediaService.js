@@ -29,11 +29,11 @@ class MediaService {
 
     console.log(`✅ URL generada, enviando a usuario...`);
 
-    // MENSAJE CORTO - Solo el link
+    // MENSAJE CON VIDEO Y OPCIÓN PARA REGRESAR
     await client.messages.create({
       from: process.env.TWILIO_PHONE_NUMBER,
       to: chatId,
-      body: `📹 *${proc.nombre}*\n\n${videoUrl}`
+      body: `📹 *${proc.nombre}*\n\n${videoUrl}\n\n🔙 *0.* Volver`
     });
 
     console.log(`✅ Video enviado a ${chatId}: ${procedimientoId}`);
@@ -69,33 +69,50 @@ async enviarDocumento(client, chatId, procedimientoId) {
       return { success: false, error: 'Procedimiento no encontrado' };
     }
 
-    console.log(`🔗 Solicitando URL firmada para documento: ${procedimientoId}`);
-    const docUrl = await this.s3Service.getDocumentoUrl(procedimientoId);
+    console.log(`🔗 Solicitando URLs acortadas para documento y flyer: ${procedimientoId}`);
     
-    if (!docUrl) {
-      console.error(`❌ No se pudo generar URL para documento: ${procedimientoId}`);
+    // Obtener URLs acortadas para PDF y Flyer
+    const docUrl = await this.s3Service.getDocumentoUrl(procedimientoId);
+    const flyerUrl = await this.s3Service.getFlyerUrl(procedimientoId);
+    
+    if (!docUrl && !flyerUrl) {
+      console.error(`❌ No se pudieron generar URLs para documentos: ${procedimientoId}`);
       await client.messages.create({
         from: process.env.TWILIO_PHONE_NUMBER,
         to: chatId,
-        body: `❌ Documento no disponible para *${proc.nombre}*`
+        body: `❌ Documentos no disponibles para *${proc.nombre}*`
       });
-      return { success: false, error: 'URL no generada' };
+      return { success: false, error: 'URLs no generadas' };
     }
 
-    console.log(`✅ URL de documento generada, enviando...`);
+    console.log(`✅ URLs de documentos generadas, enviando...`);
 
-    // MENSAJE CORTO - Solo el link
+    // Construir mensaje con PDF y/o Flyer
+    let bodyMessage = `📄 *${proc.nombre}*\n\n`;
+    
+    if (docUrl) {
+      bodyMessage += `📋 PDF: ${docUrl}\n`;
+    }
+    
+    if (flyerUrl) {
+      bodyMessage += `📰 Flyer: ${flyerUrl}\n`;
+    }
+    
+    bodyMessage += `\n🔙 *0.* Volver`;
+
+    // Enviar mensaje con documentos y opción para regresar
     await client.messages.create({
       from: process.env.TWILIO_PHONE_NUMBER,
       to: chatId,
-      body: `📄 *${proc.nombre}*\n\n${docUrl}`
+      body: bodyMessage
     });
 
-    console.log(`✅ Documento enviado a ${chatId}: ${procedimientoId}`);
+    console.log(`✅ Documentos enviados a ${chatId}: ${procedimientoId}`);
 
     return {
       success: true,
       fileName: `${procedimientoId}/documento.pdf`,
+      files: docUrl ? 1 : 0 + flyerUrl ? 1 : 0,
       source: 'AWS S3'
     };
 
@@ -106,7 +123,7 @@ async enviarDocumento(client, chatId, procedimientoId) {
       await client.messages.create({
         from: process.env.TWILIO_PHONE_NUMBER,
         to: chatId,
-        body: `❌ Error al enviar documento`
+        body: `❌ Error al enviar documentos`
       });
     } catch (sendError) {
       console.error('Error enviando mensaje de error:', sendError);

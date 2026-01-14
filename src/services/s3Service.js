@@ -48,9 +48,9 @@ class S3Service {
 }
 
   /**
-   * Genera URL firmada temporal para documento PDF
+   * Genera URL acortada temporal para documento PDF
    * @param {string} procedimientoId - ID del procedimiento
-   * @returns {Promise<string>} URL firmada válida por 1 hora
+   * @returns {Promise<string>} URL acortada válida por 1 hora
    */
   async getDocumentoUrl(procedimientoId) {
     try {
@@ -63,14 +63,48 @@ class S3Service {
         Key: key
       });
 
-      const url = await getSignedUrl(this.s3Client, command, {
+      const longUrl = await getSignedUrl(this.s3Client, command, {
         expiresIn: this.urlExpiration
       });
       
-      console.log(`✅ URL firmada de documento generada (expira en ${this.urlExpiration}s)`);
-      return url;
+      // Acortar URL
+      const shortUrl = await TinyURL.shorten(longUrl);
+      
+      console.log(`✅ URL acortada de documento generada: ${shortUrl}`);
+      return shortUrl;
     } catch (error) {
       console.error(`❌ Error generando URL para documento ${procedimientoId}:`, error);
+      return null;
+    }
+  }
+
+  /**
+   * Genera URL acortada temporal para flyer informativo
+   * @param {string} procedimientoId - ID del procedimiento
+   * @returns {Promise<string>} URL acortada válida por 1 hora
+   */
+  async getFlyerUrl(procedimientoId) {
+    try {
+      const key = `procedimientos/${procedimientoId}/flyer.pdf`;
+      
+      console.log(`🔗 Generando URL firmada para flyer: ${key}`);
+      
+      const command = new GetObjectCommand({
+        Bucket: this.bucketName,
+        Key: key
+      });
+
+      const longUrl = await getSignedUrl(this.s3Client, command, {
+        expiresIn: this.urlExpiration
+      });
+      
+      // Acortar URL
+      const shortUrl = await TinyURL.shorten(longUrl);
+      
+      console.log(`✅ URL acortada de flyer generada: ${shortUrl}`);
+      return shortUrl;
+    } catch (error) {
+      console.error(`❌ Error generando URL para flyer ${procedimientoId}:`, error);
       return null;
     }
   }
