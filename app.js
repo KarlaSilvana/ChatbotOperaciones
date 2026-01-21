@@ -112,12 +112,30 @@ app.post('/webhook/messages', async (req, res) => {
           });
         }
         
-        // Enviar mensaje interactivo para continuar o salir
-        const continuarMessage = '💬 ¿Tienes otra consulta? Escribe tu pregunta o 0 para salir.';
+        // ⭐ ACTUALIZADO: Enviar mensaje final modo-específico (en dos mensajes separados)
+        
+        // Primer mensaje: pregunta de continuación
+        const continuarMessage = '💬 ¿Tienes otra consulta?';
         await twilio_client.messages.create({
           from: to,
           to: from,
           body: continuarMessage
+        });
+        
+        // Segundo mensaje: opción de volver según el modo
+        let volverMessage = '';
+        if (modoIA === 'chat') {
+          volverMessage = '🔙 *0. Volver al Menú Principal 🏠*';
+        } else if (modoIA === 'consulta') {
+          volverMessage = '🔙 *0. Volver al Menú Procedimientos*';
+        } else {
+          volverMessage = '🔙 *0. Volver*';
+        }
+        
+        await twilio_client.messages.create({
+          from: to,
+          to: from,
+          body: volverMessage
         });
         
         // Log de éxito
@@ -249,6 +267,31 @@ app.post('/webhook/messages', async (req, res) => {
           logger.success(`Menú del procedimiento reenviado a ${from}`);
         }
       }
+    } else if (respuesta.action === 'navigate' && respuesta.modoIA) {
+      // ⭐ NUEVO: Manejo especial para inicio de modo IA con mensaje inicial modo-específico
+      const modoIA = respuesta.modoIA;
+      const phoneNumber = from.replace('whatsapp:', '');
+      
+      // Mensaje inicial según el modo
+      let initialMessage = '';
+      if (modoIA === 'chat') {
+        initialMessage = '🤖 *Asistente IA Activado*\n\nPuedes hacerme cualquier pregunta.\n\n🔙 *0. Volver al Menú Principal 🏠*';
+      } else if (modoIA === 'consulta') {
+        initialMessage = '🤖 *Asistente IA Activado*\n\nPuedes hacerme cualquier pregunta sobre este procedimiento.\n\n🔙 *0. Volver al Menú Procedimientos*';
+      }
+      
+      // Enviar mensaje inicial
+      if (initialMessage) {
+        await twilio_client.messages.create({
+          from: to,
+          to: from,
+          body: initialMessage
+        });
+        logger.success(`Mensaje inicial IA enviado a ${from} (modo: ${modoIA})`);
+      }
+      
+      res.status(200).send('Message processed');
+      return;
     } else {
       // Enviar mensaje de texto normal
       const messageData = {
