@@ -285,7 +285,6 @@ app.post('/webhook/messages', async (req, res) => {
       
       // ⭐ NUEVO: Manejo especial para inicio de modo IA con mensaje inicial modo-específico
       const modoIA = respuesta.modoIA;
-      const phoneNumber = from.replace('whatsapp:', '');
       
       // Mensaje inicial según el modo
       let initialMessage = '';
