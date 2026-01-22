@@ -80,6 +80,20 @@ class NavigationManager {
   }
 
   /**
+   * Actualiza el timestamp de última actividad del usuario
+   * Debe ser llamado después de CUALQUIER acción del usuario
+   * @param {string} userId - ID del usuario
+   */
+  updateUserActivity(userId) {
+    const state = this.userStates.get(userId);
+    if (!state) return false;
+    
+    state.lastActivity = Date.now();
+    this.userStates.set(userId, state);
+    return true;
+  }
+
+  /**
    * Obtiene e indica si la sesión fue expirada (y la marca como procesada)
    */
   getAndClearSessionExpiredFlag(userId) {

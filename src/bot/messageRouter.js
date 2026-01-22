@@ -40,10 +40,8 @@ async function procesarMensaje(userId, mensaje) {
       }
       
       // Actualizar lastActivity si NO ha expirado
-      // Asegurarse de guardar cambios al estado
-      const currentState = navigationManager.getUserState(userId);
-      currentState.lastActivity = Date.now();
-      navigationManager.userStates.set(userId, currentState);
+      // Usar método centralizado para sincronización con app.js
+      navigationManager.updateUserActivity(userId);
     }
 
     // ⭐ NUEVO: Detectar si usuario está en modo IA

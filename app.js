@@ -78,6 +78,9 @@ app.post('/webhook/messages', async (req, res) => {
 
     // Manejar diferentes tipos de acciones
     if (respuesta.action === 'chat_ia_response') {
+      // ⭐ Actualizar actividad del usuario
+      navigationManager.updateUserActivity(phoneNumber);
+      
       // ⭐ NUEVO: Manejar consulta a RAG
       try {
         // Obtener contexto IA
@@ -163,6 +166,9 @@ app.post('/webhook/messages', async (req, res) => {
     // ⭐ NUEVO: Manejar búsqueda en directorio
     if (respuesta.action === 'directorio_search') {
       try {
+        // ⭐ Actualizar actividad del usuario
+        navigationManager.updateUserActivity(phoneNumber);
+        
         // Realizar búsqueda
         const busqueda = directorioService.buscar(respuesta.query);
 
@@ -228,6 +234,9 @@ app.post('/webhook/messages', async (req, res) => {
     }
     
     if (respuesta.action === 'send_video') {
+      // ⭐ Actualizar actividad del usuario
+      navigationManager.updateUserActivity(phoneNumber);
+      
       // Enviar video del procedimiento
       const resultado = await mediaService.enviarVideo(twilio_client, from, respuesta.procedimientoId);
       
@@ -248,6 +257,9 @@ app.post('/webhook/messages', async (req, res) => {
         }
       }
     } else if (respuesta.action === 'send_documento') {
+      // ⭐ Actualizar actividad del usuario
+      navigationManager.updateUserActivity(phoneNumber);
+      
       // Enviar documento del procedimiento
       const resultado = await mediaService.enviarDocumento(twilio_client, from, respuesta.procedimientoId);
       
@@ -268,6 +280,9 @@ app.post('/webhook/messages', async (req, res) => {
         }
       }
     } else if (respuesta.action === 'navigate' && respuesta.modoIA) {
+      // ⭐ Actualizar actividad del usuario
+      navigationManager.updateUserActivity(phoneNumber);
+      
       // ⭐ NUEVO: Manejo especial para inicio de modo IA con mensaje inicial modo-específico
       const modoIA = respuesta.modoIA;
       const phoneNumber = from.replace('whatsapp:', '');
