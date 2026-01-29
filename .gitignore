@@ -19,3 +19,10 @@ media/
 
 # AWS S3 - Archivos multimedia ignorados (ahora en S3)
 src/media/
+
+# Métricas y datos locales
+data/
+reports/
+test-reports/
+/data/chatbot_metrics.db
+/reports/*.json

@@ -14,6 +14,8 @@ const DirectorioFormatter = require('./src/services/directorioFormatter');
 const DirectorioRouter = require('./src/bot/directorioRouter');
 const menus = require('./src/bot/menus');
 const logger = require('./src/utils/logger');
+const metricsService = require('./src/services/metricsService');
+const nightlyReportJob = require('./src/jobs/nightly-report-job');
 
 const app = express();
 const port = process.env.PORT || 5000;
@@ -32,6 +34,9 @@ const twilio_client = twilio(TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN);
 
 // Inicializar Session Scheduler
 sessionScheduler.init(twilio_client, navigationManager);
+
+// Inicializar Nightly Report Job
+nightlyReportJob.initNightlyReportJob();
 
 /**
  * Health check + S3 Status
@@ -81,7 +86,7 @@ app.post('/webhook/messages', async (req, res) => {
       // ⭐ Actualizar actividad del usuario
       navigationManager.updateUserActivity(phoneNumber);
       
-      // ⭐ NUEVO: Manejar consulta a RAG
+    // ⭐ NUEVO: Manejar consulta a RAG
       try {
         // Obtener contexto IA
         const context = navigationManager.getIAContext(phoneNumber);
@@ -90,6 +95,18 @@ app.post('/webhook/messages', async (req, res) => {
         // Llamar a RAG Service con o sin tema
         const tema = modoIA === 'consulta' ? context.procedimientoNombre : null;
         const ragResponse = await ragService.sendQuery(respuesta.text, tema);
+        
+        // ⭐ REGISTRAR CONSULTA DE IA EN METRICS
+        const procedimientoId = modoIA === 'consulta' ? context.procedimientoId : 'general_chat';
+        const procedimientoNombre = modoIA === 'consulta' ? context.procedimientoNombre : 'Chat General';
+        metricsService.recordIAConsultation(
+          phoneNumber,
+          procedimientoId,
+          procedimientoNombre,
+          modoIA,
+          respuesta.text,
+          ragResponse.response
+        ).catch(err => logger.error('Error recording IA consultation:', err));
         
         // Agregar mensaje de usuario al historial
         navigationManager.addIAConversationMessage(phoneNumber, {
@@ -169,6 +186,10 @@ app.post('/webhook/messages', async (req, res) => {
         // ⭐ Actualizar actividad del usuario
         navigationManager.updateUserActivity(phoneNumber);
         
+        // ⭐ REGISTRAR EVENTO DE BÚSQUEDA EN DIRECTORIO
+        metricsService.recordEvent(phoneNumber, 'USER_SEARCH_DIRECTORIO', null, 'Directorio')
+          .catch(err => logger.error('Error recording directorio search:', err));
+        
         // Realizar búsqueda
         const busqueda = directorioService.buscar(respuesta.query);
 
@@ -237,6 +258,14 @@ app.post('/webhook/messages', async (req, res) => {
       // ⭐ Actualizar actividad del usuario
       navigationManager.updateUserActivity(phoneNumber);
       
+      // ⭐ REGISTRAR EVENTO DE SOLICITUD DE VIDEO
+      metricsService.recordEvent(
+        phoneNumber,
+        'USER_REQUEST_VIDEO',
+        respuesta.procedimientoId,
+        respuesta.procedimientoNombre || 'Unknown'
+      ).catch(err => logger.error('Error recording video request:', err));
+      
       // Enviar video del procedimiento
       const resultado = await mediaService.enviarVideo(twilio_client, from, respuesta.procedimientoId);
       
@@ -259,6 +288,14 @@ app.post('/webhook/messages', async (req, res) => {
     } else if (respuesta.action === 'send_documento') {
       // ⭐ Actualizar actividad del usuario
       navigationManager.updateUserActivity(phoneNumber);
+      
+      // ⭐ REGISTRAR EVENTO DE SOLICITUD DE DOCUMENTO
+      metricsService.recordEvent(
+        phoneNumber,
+        'USER_REQUEST_DOCUMENTO',
+        respuesta.procedimientoId,
+        respuesta.procedimientoNombre || 'Unknown'
+      ).catch(err => logger.error('Error recording documento request:', err));
       
       // Enviar documento del procedimiento
       const resultado = await mediaService.enviarDocumento(twilio_client, from, respuesta.procedimientoId);
@@ -283,8 +320,15 @@ app.post('/webhook/messages', async (req, res) => {
       // ⭐ Actualizar actividad del usuario
       navigationManager.updateUserActivity(phoneNumber);
       
-      // ⭐ NUEVO: Manejo especial para inicio de modo IA con mensaje inicial modo-específico
+      // ⭐ REGISTRAR EVENTO DE INICIO DE IA
       const modoIA = respuesta.modoIA;
+      const procedimientoId = modoIA === 'consulta' ? respuesta.procedimientoId : 'general_chat';
+      const procedimientoNombre = modoIA === 'consulta' ? respuesta.procedimientoNombre : 'Chat General';
+      
+      metricsService.recordEvent(phoneNumber, 'USER_START_IA_CONSULTA', procedimientoId, procedimientoNombre)
+        .catch(err => logger.error('Error recording IA start:', err));
+      
+      // ⭐ NUEVO: Manejo especial para inicio de modo IA con mensaje inicial modo-específico
       
       // Mensaje inicial según el modo
       let initialMessage = '';
