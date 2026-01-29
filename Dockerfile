@@ -40,6 +40,10 @@ COPY --from=builder --chown=nodejs:nodejs /app/node_modules ./node_modules
 # Copiar código fuente
 COPY --chown=nodejs:nodejs . .
 
+# Crear directorios necesarios para métricas y reportes
+RUN mkdir -p /app/data /app/reports && \
+    chown -R nodejs:nodejs /app/data /app/reports
+
 # Cambiar a usuario no-root
 USER nodejs
 
