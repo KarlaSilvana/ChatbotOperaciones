@@ -416,6 +416,67 @@ app.get('/api/procedimientos', (req, res) => {
 });
 
 /**
+ * ⭐ TESTING: Endpoint para obtener estadísticas de eventos
+ * GET /api/metrics/stats/events
+ */
+app.get('/api/metrics/stats/events', async (req, res) => {
+  try {
+    const stats = await metricsService.getInteractionStats();
+    res.status(200).json({
+      success: true,
+      data: stats
+    });
+  } catch (error) {
+    logger.error('Error fetching event stats:', error);
+    res.status(500).json({
+      error: 'Failed to fetch stats',
+      details: error.message
+    });
+  }
+});
+
+/**
+ * ⭐ TESTING: Endpoint para obtener estadísticas de consultas IA
+ * GET /api/metrics/stats/ia-consultations
+ */
+app.get('/api/metrics/stats/ia-consultations', async (req, res) => {
+  try {
+    const stats = await metricsService.getIAConsultationStats();
+    res.status(200).json({
+      success: true,
+      data: stats
+    });
+  } catch (error) {
+    logger.error('Error fetching IA stats:', error);
+    res.status(500).json({
+      error: 'Failed to fetch stats',
+      details: error.message
+    });
+  }
+});
+
+/**
+ * ⭐ TESTING: Endpoint para ejecutar reporte manualmente
+ * POST /api/metrics/generate-report
+ */
+app.post('/api/metrics/generate-report', async (req, res) => {
+  try {
+    const report = await nightlyReportJob.generateNightlyReport();
+    res.status(200).json({
+      success: true,
+      message: 'Reporte generado exitosamente',
+      report: report
+    });
+  } catch (error) {
+    logger.error('Error generating report:', error);
+    res.status(500).json({
+      error: 'Failed to generate report',
+      details: error.message
+    });
+  }
+});
+
+/**
  * Error handling
  */
 app.use((err, req, res, next) => {
