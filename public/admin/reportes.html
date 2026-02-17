@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Reportes - Admin</title>
+  <link rel="stylesheet" href="css/admin.css">
+</head>
+<body>
+  <!-- NAVBAR -->
+  <nav class="navbar">
+    <div class="navbar-brand">🏦 Caja Los Andes - Admin</div>
+    <div class="navbar-nav">
+      <a href="index.html" class="nav-link">Dashboard</a>
+      <a href="procedimientos.html" class="nav-link">Procedimientos</a>
+      <a href="directorio.html" class="nav-link">Directorio</a>
+      <a href="reportes.html" class="nav-link active">Reportes</a>
+    </div>
+  </nav>
+
+  <!-- CONTAINER -->
+  <div class="container">
+    <h1>📊 Reportes del Sistema</h1>
+
+    <div class="card">
+      <p>Se generan automáticamente cada noche a las 22:00</p>
+      <button class="btn btn-primary" onclick="loadReport()">🔄 Recargar</button>
+    </div>
+
+    <!-- ALERTS -->
+    <div id="alertContainer"></div>
+
+    <!-- REPORT DATA -->
+    <div class="card" id="reportCard" style="display: none;">
+      <div class="card-title" id="reportTitle">Reporte del Sistema</div>
+      
+      <div style="display: grid; gap: 1.5rem;">
+        <!-- TOP PROCEDIMIENTOS -->
+        <div>
+          <h4>📋 Top Procedimientos Solicitados</h4>
+          <div id="topProcedimientos"></div>
+        </div>
+
+        <!-- VIDEO VS DOCUMENTO -->
+        <div>
+          <h4>📹 Ratio Video vs Documento</h4>
+          <div id="videoDocRatio"></div>
+        </div>
+
+        <!-- IA USAGE -->
+        <div>
+          <h4>🤖 Consultas de IA</h4>
+          <div id="iaUsage"></div>
+        </div>
+
+        <!-- FREQUENT QUESTIONS -->
+        <div>
+          <h4>❓ Preguntas Frecuentes (≥2 veces)</h4>
+          <div id="frequentQuestions"></div>
+        </div>
+
+        <!-- TOP COLLABORATORS -->
+        <div>
+          <h4>👥 Colaboradores Más Activos</h4>
+          <div id="topCollaborators"></div>
+        </div>
+      </div>
+
+      <div class="modal-footer" style="margin-top: 2rem;">
+        <button class="btn btn-secondary" onclick="downloadReport()">⬇️ Descargar JSON</button>
+      </div>
+    </div>
+
+    <div id="noReportCard" class="card">
+      <div class="text-center">
+        <p style="font-size: 2rem; margin-bottom: 1rem;">⏳</p>
+        <p>No hay reportes disponibles aún</p>
+        <p class="text-muted">Los reportes se generan automáticamente cada noche</p>
+      </div>
+    </div>
+  </div>
+
+  <script src="js/api.js"></script>
+  <script src="js/reportes.js"></script>
+</body>
+</html>

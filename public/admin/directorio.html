@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Directorio - Admin</title>
+  <link rel="stylesheet" href="css/admin.css">
+</head>
+<body>
+  <!-- NAVBAR -->
+  <nav class="navbar">
+    <div class="navbar-brand">🏦 Caja Los Andes - Admin</div>
+    <div class="navbar-nav">
+      <a href="index.html" class="nav-link">Dashboard</a>
+      <a href="procedimientos.html" class="nav-link">Procedimientos</a>
+      <a href="directorio.html" class="nav-link active">Directorio</a>
+      <a href="reportes.html" class="nav-link">Reportes</a>
+    </div>
+  </nav>
+
+  <!-- CONTAINER -->
+  <div class="container">
+    <h1>👥 Gestión de Directorio</h1>
+
+    <div class="card">
+      <button class="btn btn-primary" onclick="showCreateModal()">➕ Nuevo Contacto</button>
+    </div>
+
+    <!-- BÚSQUEDA Y FILTROS -->
+    <div class="card">
+      <div class="search-bar">
+        <input type="text" id="searchInput" class="form-control" placeholder="🔍 Buscar por nombre..." onkeyup="handleSearch()">
+        <select id="regionFilter" class="form-control" style="flex: 0.5; min-width: 150px;" onchange="handleFilter()">
+          <option value="">Todas las regiones</option>
+          <option value="SEDE">SEDE</option>
+          <option value="CUSCO">CUSCO</option>
+          <option value="AREQUIPA">AREQUIPA</option>
+        </select>
+        <button class="btn btn-secondary" onclick="resetFilters()">Limpiar</button>
+      </div>
+    </div>
+
+    <!-- ALERTS -->
+    <div id="alertContainer"></div>
+
+    <!-- TABLA DIRECTORIO -->
+    <div class="card">
+      <div class="table-responsive">
+        <table class="table">
+          <thead>
+            <tr>
+              <th>Nombre</th>
+              <th>Teléfono</th>
+              <th>Cargo</th>
+              <th>Región</th>
+              <th>Oficina</th>
+              <th>Acciones</th>
+            </tr>
+          </thead>
+          <tbody id="directorioTableBody">
+            <tr><td colspan="6" class="text-center">Cargando...</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- PAGINACIÓN -->
+      <div class="pagination" id="paginationContainer"></div>
+
+      <div class="text-center text-muted" id="paginationInfo"></div>
+    </div>
+  </div>
+
+  <!-- MODAL CREAR/EDITAR -->
+  <div class="modal" id="contactModal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2 class="modal-title" id="modalTitle">Nuevo Contacto</h2>
+        <button class="modal-close" onclick="closeModal()">✕</button>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Nombre Completo *</label>
+        <input type="text" class="form-control" id="contactName" placeholder="Ej: Juan Pérez García">
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Teléfono *</label>
+        <input type="tel" class="form-control" id="contactPhone" placeholder="Ej: 987654321">
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Cargo</label>
+        <input type="text" class="form-control" id="contactCargo" placeholder="Ej: Analista">
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Región</label>
+        <select class="form-control" id="contactRegion">
+          <option value="">Seleccionar...</option>
+          <option value="SEDE">SEDE</option>
+          <option value="CUSCO">CUSCO</option>
+          <option value="AREQUIPA">AREQUIPA</option>
+        </select>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Oficina</label>
+        <input type="text" class="form-control" id="contactOficina" placeholder="Ej: PRINCIPAL">
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Establecimiento</label>
+        <input type="text" class="form-control" id="contactEstablecimiento" placeholder="">
+      </div>
+
+      <div class="modal-footer">
+        <button class="btn btn-secondary" onclick="closeModal()">Cancelar</button>
+        <button class="btn btn-success" onclick="saveContacto()">Guardar</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL CONFIRMAR ELIMINAR -->
+  <div class="modal" id="confirmModal">
+    <div class="modal-content" style="max-width: 400px;">
+      <div class="modal-header">
+        <h2 class="modal-title">⚠️ Confirmar Eliminación</h2>
+        <button class="modal-close" onclick="closeConfirm()">✕</button>
+      </div>
+      <p id="confirmMessage">¿Está seguro de que desea eliminar este contacto?</p>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" onclick="closeConfirm()">Cancelar</button>
+        <button class="btn btn-danger" onclick="confirmDelete()">Eliminar</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="js/api.js"></script>
+  <script src="js/directorio.js"></script>
+</body>
+</html>

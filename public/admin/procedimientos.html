@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Procedimientos - Admin</title>
+  <link rel="stylesheet" href="css/admin.css">
+</head>
+<body>
+  <!-- NAVBAR -->
+  <nav class="navbar">
+    <div class="navbar-brand">🏦 Caja Los Andes - Admin</div>
+    <div class="navbar-nav">
+      <a href="index.html" class="nav-link">Dashboard</a>
+      <a href="procedimientos.html" class="nav-link active">Procedimientos</a>
+      <a href="directorio.html" class="nav-link">Directorio</a>
+      <a href="reportes.html" class="nav-link">Reportes</a>
+    </div>
+  </nav>
+
+  <!-- CONTAINER -->
+  <div class="container">
+    <h1>📋 Gestión de Procedimientos</h1>
+
+    <div class="card">
+      <button class="btn btn-primary" onclick="showCreateModal()">➕ Nuevo Procedimiento</button>
+    </div>
+
+    <!-- ALERTS -->
+    <div id="alertContainer"></div>
+
+    <!-- TABLA PROCEDIMIENTOS -->
+    <div class="card">
+      <div class="table-responsive">
+        <table class="table">
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>Nombre</th>
+              <th>Emoji</th>
+              <th>Archivos</th>
+              <th>Acciones</th>
+            </tr>
+          </thead>
+          <tbody id="procedimientosTableBody">
+            <tr><td colspan="5" class="text-center">Cargando...</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL CREAR/EDITAR -->
+  <div class="modal" id="procModal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2 class="modal-title" id="modalTitle">Nuevo Procedimiento</h2>
+        <button class="modal-close" onclick="closeModal()">✕</button>
+      </div>
+      
+      <div class="form-group">
+        <label class="form-label">ID *</label>
+        <input type="text" class="form-control" id="procId" placeholder="ej: firma_electronica">
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Número *</label>
+        <input type="number" class="form-control" id="procNumber" placeholder="ej: 1">
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Nombre *</label>
+        <input type="text" class="form-control" id="procName" placeholder="ej: Firma Electrónica">
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Emoji</label>
+        <input type="text" class="form-control" id="procEmoji" maxlength="2" placeholder="ej: ✍️">
+      </div>
+
+      <hr style="margin: 1.5rem 0;">
+      <h3 style="margin-bottom: 1rem;">📁 Archivos en S3</h3>
+
+      <div class="form-group">
+        <label class="form-label">Video (.mp4)</label>
+        <div class="upload-zone" id="videoZone" ondrop="handleDrop(event, 'video')" ondragover="handleDragOver(event)">
+          <p>📹 Arrastra video aquí o</p>
+          <input type="file" id="videoFile" accept=".mp4" style="display: none;" onchange="handleFileSelect(event, 'video')">
+          <button type="button" class="btn btn-sm btn-secondary" onclick="document.getElementById('videoFile').click()">Seleccionar</button>
+          <p id="videoFileName" class="text-muted" style="font-size: 0.85rem;">Sin archivo</p>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">PDF (.pdf)</label>
+        <div class="upload-zone" id="pdfZone" ondrop="handleDrop(event, 'pdf')" ondragover="handleDragOver(event)">
+          <p>📄 Arrastra PDF aquí o</p>
+          <input type="file" id="pdfFile" accept=".pdf" style="display: none;" onchange="handleFileSelect(event, 'pdf')">
+          <button type="button" class="btn btn-sm btn-secondary" onclick="document.getElementById('pdfFile').click()">Seleccionar</button>
+          <p id="pdfFileName" class="text-muted" style="font-size: 0.85rem;">Sin archivo</p>
+        </div>
+      </div>
+
+      <div class="modal-footer">
+        <button class="btn btn-secondary" onclick="closeModal()">Cancelar</button>
+        <button class="btn btn-success" onclick="saveProcedimiento()">Guardar</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="js/api.js"></script>
+  <script src="js/procedimientos.js"></script>
+</body>
+</html>

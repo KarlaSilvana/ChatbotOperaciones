@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Panel Administrativo - Caja Los Andes</title>
+  <link rel="stylesheet" href="css/admin.css">
+</head>
+<body>
+  <!-- NAVBAR -->
+  <nav class="navbar">
+    <div class="navbar-brand">🏦 Caja Los Andes - Admin</div>
+    <div class="navbar-nav">
+      <a href="index.html" class="nav-link active">Dashboard</a>
+      <a href="procedimientos.html" class="nav-link">Procedimientos</a>
+      <a href="directorio.html" class="nav-link">Directorio</a>
+      <a href="reportes.html" class="nav-link">Reportes</a>
+    </div>
+  </nav>
+
+  <!-- CONTAINER -->
+  <div class="container">
+    <h1>📊 Dashboard Administrativo</h1>
+
+    <div class="card">
+      <div class="card-title">Bienvenido al Panel Admin</div>
+      <p>Administra procedimientos, directorio y archivos de tu institución.</p>
+    </div>
+
+    <!-- STATISTICS -->
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 1.5rem; margin-bottom: 2rem;">
+      <div class="card">
+        <div style="font-size: 2rem; color: var(--primary); margin-bottom: 0.5rem;">📋</div>
+        <div class="card-title">Procedimientos</div>
+        <p><strong id="procCount">Cargando...</strong></p>
+        <a href="procedimientos.html" class="btn btn-primary btn-sm" style="margin-top: 0.5rem; width: 100%;">Administrar</a>
+      </div>
+
+      <div class="card">
+        <div style="font-size: 2rem; color: var(--success); margin-bottom: 0.5rem;">👥</div>
+        <div class="card-title">Directorio</div>
+        <p><strong id="dirCount">Cargando...</strong></p>
+        <a href="directorio.html" class="btn btn-success btn-sm" style="margin-top: 0.5rem; width: 100%;">Administrar</a>
+      </div>
+
+      <div class="card">
+        <div style="font-size: 2rem; color: var(--warning); margin-bottom: 0.5rem;">📊</div>
+        <div class="card-title">Reportes</div>
+        <p><strong id="reportStatus">Cargando...</strong></p>
+        <a href="reportes.html" class="btn btn-warning btn-sm" style="margin-top: 0.5rem; width: 100%;">Ver Reportes</a>
+      </div>
+    </div>
+
+    <!-- FEATURES -->
+    <div class="card">
+      <div class="card-title">✨ Características</div>
+      <ul style="line-height: 2; color: #6b7280;">
+        <li>✅ Crear, editar y eliminar procedimientos</li>
+        <li>✅ Subir videos y PDFs a S3</li>
+        <li>✅ Administrar directorio de contactos</li>
+        <li>✅ Buscar y filtrar por región</li>
+        <li>✅ Paginación de directorio</li>
+        <li>✅ Ver reportes de uso del sistema</li>
+      </ul>
+    </div>
+  </div>
+
+  <script src="js/api.js"></script>
+  <script>
+    // Cargar estadísticas
+    async function loadStats() {
+      try {
+        // Procedimientos
+        const procsRes = await fetch('/admin/api/procedimientos');
+        const procsData = await procsRes.json();
+        document.getElementById('procCount').textContent = `${procsData.data?.length || 0} procedimientos`;
+
+        // Directorio
+        const dirRes = await fetch('/admin/api/directorio?page=1&perPage=1');
+        const dirData = await dirRes.json();
+        document.getElementById('dirCount').textContent = `${dirData.pagination?.total || 0} contactos`;
+
+        // Reportes
+        const reportRes = await fetch('/admin/api/latest-report');
+        if (reportRes.ok) {
+          const reportData = await reportRes.json();
+          document.getElementById('reportStatus').textContent = '✅ Disponible';
+        } else {
+          document.getElementById('reportStatus').textContent = '⏳ Sin reportes aún';
+        }
+      } catch(err) {
+        console.error('Error loading stats:', err);
+      }
+    }
+
+    loadStats();
+    setInterval(loadStats, 30000); // Actualizar cada 30 seg
+  </script>
+</body>
+</html>

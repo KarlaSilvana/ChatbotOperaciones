@@ -16,6 +16,7 @@ const menus = require('./src/bot/menus');
 const logger = require('./src/utils/logger');
 const metricsService = require('./src/services/metricsService');
 const nightlyReportJob = require('./src/jobs/nightly-report-job');
+const adminRoutes = require('./src/routes/admin');
 
 const app = express();
 const port = process.env.PORT || 5000;
@@ -23,6 +24,9 @@ const port = process.env.PORT || 5000;
 // Middleware
 app.use(express.urlencoded({ extended: false }));
 app.use(express.json());
+
+// ⭐ Servir archivos estáticos (admin panel, etc)
+app.use(express.static(path.join(__dirname, 'public')));
 
 // NOTA: src/media ya no se sirve localmente (archivos en AWS S3)
 // app.use('/media', express.static(path.join(__dirname, 'src/media'))); // ❌ DEPRECATED
@@ -475,6 +479,12 @@ app.post('/api/metrics/generate-report', async (req, res) => {
     });
   }
 });
+
+/**
+ * ⭐ ADMIN PANEL ROUTES
+ * Rutas para administración de procedimientos, directorio y archivos
+ */
+app.use('/admin/api', adminRoutes);
 
 /**
  * Error handling

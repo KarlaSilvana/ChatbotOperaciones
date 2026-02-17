@@ -57,13 +57,37 @@ function initializeDatabase() {
             query_date DATE,
             timestamp DATETIME DEFAULT CURRENT_TIMESTAMP
           )
+        `);
+
+        // Crear tabla procedimientos (para admin panel)
+        db.run(`
+          CREATE TABLE IF NOT EXISTS procedimientos (
+            id TEXT PRIMARY KEY,
+            numero INTEGER UNIQUE,
+            nombre TEXT NOT NULL,
+            emoji TEXT,
+            recursos_json TEXT
+          )
+        `);
+
+        // Crear tabla directorio (para admin panel)
+        db.run(`
+          CREATE TABLE IF NOT EXISTS directorio (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            nombreCompleto TEXT NOT NULL,
+            telefono TEXT,
+            cargo TEXT,
+            region TEXT,
+            oficina TEXT,
+            establecimiento TEXT
+          )
         `, (err) => {
           if (err) {
-            console.error('Error creating ia_consultations table:', err);
+            console.error('Error creating admin tables:', err);
             reject(err);
             return;
           }
-          console.log('✓ Database initialized successfully');
+          console.log('✓ Database initialized successfully with admin tables');
           resolve(true);
         });
       });
