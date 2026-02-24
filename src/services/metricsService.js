@@ -212,10 +212,10 @@ async function getIAConsultationsForExport(fromDate, toDate) {
         timestamp,
         phone_number,
         CASE 
-          WHEN procedure_name = 'Chat General' THEN 'general'
+          WHEN procedimiento_nombre = 'Chat General' THEN 'general'
           ELSE 'procedure'
         END as query_type,
-        procedure_name,
+        procedimiento_nombre as procedure_name,
         user_query,
         rag_response,
         mode as ia_mode
@@ -251,7 +251,7 @@ async function getEventsForExport(fromDate, toDate) {
         timestamp,
         phone_number,
         event_type,
-        procedure_name
+        procedimiento_nombre as procedure_name
       FROM interaction_events
       WHERE DATE(timestamp) BETWEEN ? AND ?
       ORDER BY timestamp DESC
