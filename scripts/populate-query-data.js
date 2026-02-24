@@ -202,6 +202,166 @@ const qaDatabase = [
   {
     question: '¿Si cambio DNI o nombre que pasa?',
     answer: 'Se deben volver a firmar los documentos contractuales.'
+  },
+  {
+    question: '¿Qué pasa si marco mas de un medio de envio del link?',
+    answer: 'No se debe. Solo se puede seleccionar una sola modalidad (Correo, WhatsApp o SMS).'
+  },
+  {
+    question: '¿La transferencia interbancaria con firma electronica quien la hace?',
+    answer: 'La Ejecutiva del Corporativo, sin presencia del cliente.'
+  },
+  {
+    question: '¿Qué debe enviar la agencia para una transferencia interbancaria?',
+    answer: 'Correo a Ventanilla Central adjuntando: voucher, FUS firmado digitalmente, CCI, nombre de la entidad financiera y monto.'
+  },
+  {
+    question: '¿El cliente necesita saber usar tecnologia para firma electronica?',
+    answer: 'Sí. Debe contar con celular y manejo básico de tecnología.'
+  },
+  {
+    question: '¿Si el cliente no tiene celular puede hacer firma electronica?',
+    answer: 'No. Es requisito contar con celular.'
+  },
+  {
+    question: '¿Qué hago antes de enviar el link?',
+    answer: 'Verificar que el número de celular o correo estén correctamente registrados.'
+  },
+  {
+    question: '¿Qué estado debe tener para poder cancelar la firma?',
+    answer: 'Debe estar en estado "Solicitado" o "Firmado".'
+  },
+  {
+    question: '¿Qué pasa con el pagare cuando anulo una firma electronica?',
+    answer: 'Los documentos contractuales se eliminan automáticamente, excepto el pagaré. El área de Operaciones lo anula desde Cavali.'
+  },
+  {
+    question: '¿Si el estado dice "Firmado" que significa?',
+    answer: 'Que el cliente culminó la firma y se puede proceder con el desembolso.'
+  },
+  {
+    question: '¿Si sale estado registrado que hago?',
+    answer: 'Si no se firmó el mismo día, se debe cancelar la solicitud.'
+  },
+  {
+    question: '¿Qué mensaje sale cuando la validacion es exitosa?',
+    answer: '"Identificación Exitosa".'
+  },
+  {
+    question: '¿Qué hago si la huella no coincide con RENIEC?',
+    answer: 'No se puede continuar la operación si no hay coincidencias en validación y protocolo.'
+  },
+  {
+    question: '¿Qué preguntas debo hacer en el protocolo?',
+    answer: 'Nombre de padres, saldo aproximado, última operación, oficina, número de celular, correo y dirección registrada.'
+  },
+  {
+    question: '¿Qué foto debo subir en excepcion biometrica?',
+    answer: 'Foto instantánea del cliente sosteniendo su DNI, sin lentes ni objetos que dificulten identificación.'
+  },
+  {
+    question: '¿Para cliente extranjero que documento se adjunta?',
+    answer: 'Foto con Carné de Extranjería y copia clara por ambos lados.'
+  },
+  {
+    question: '¿Si es refinanciamiento sin presencia del cliente que adjunto?',
+    answer: 'Correos de sustento y autorización correspondientes.'
+  },
+  {
+    question: '¿En que caso marco aprobacion de nivel superior?',
+    answer: 'Solo si existe duda sobre la identidad del cliente.'
+  },
+  {
+    question: '¿Si el monto es menor o igual a 10 mil necesita aprobacion?',
+    answer: 'No. Se aprueba automáticamente con validación del usuario.'
+  },
+  {
+    question: '¿Quién puede aprobar en ausencia del Supervisor Regional?',
+    answer: 'El Analista de Operaciones Corporativo.'
+  },
+  {
+    question: '¿En que operaciones aplica control biometrico?',
+    answer: 'Retiros de efectivo, desembolsos, refinanciamientos, desbloqueo de cuentas, entre otros.'
+  },
+  {
+    question: '¿Quién ejecuta el extorno en CoreBank?',
+    answer: 'El Analista o el área de Operaciones, una vez aprobado.'
+  },
+  {
+    question: '¿Qué pasa si el cliente ya se fue y quiere extorno?',
+    answer: 'Debe presentar DOI físico vigente y voucher original.'
+  },
+  {
+    question: '¿Dónde registro el extorno en el sistema?',
+    answer: 'En CoreBank → Módulo Créditos → Extornar Cobro o Extornar Desembolso (según tipo).'
+  },
+  {
+    question: '¿Qué debo escribir en el campo sustento del extorno?',
+    answer: 'Breve explicación del motivo por el cual se realiza el extorno.'
+  },
+  {
+    question: '¿Si el extorno es con cliente presente que debo hacer?',
+    answer: 'Imprimir voucher, solicitar firma, huella y número de DOI.'
+  },
+  {
+    question: '¿Si es cliente iletrado en extorno que se pide?',
+    answer: 'Solo huella dactilar.'
+  },
+  {
+    question: '¿Quién aprueba reimpresion de constancia de cancelacion?',
+    answer: 'Coordinador de Operaciones, luego Supervisor de Operaciones, Jefe de Oficina y Analista de Operaciones.'
+  },
+  {
+    question: '¿La primera impresion de constancia necesita aprobacion?',
+    answer: 'No. Es automática y gratuita.'
+  },
+  {
+    question: '¿Quién aprueba ampliacion de montos para remesas?',
+    answer: 'Analista de Operaciones.'
+  },
+  {
+    question: '¿Quién aprueba limites en EOB?',
+    answer: 'Supervisor de Operaciones y luego Analista de Operaciones.'
+  },
+  {
+    question: '¿Puedo editar directo sin hacer solicitud?',
+    answer: 'Solo en campos que no tengan aspa amarilla. Si tiene aspa amarilla requiere solicitud.'
+  },
+  {
+    question: '¿Quién puede solicitar actualizacion de datos?',
+    answer: 'Ejecutivo de Servicios y Asesor de Negocios.'
+  },
+  {
+    question: '¿Qué pasa si no adjunto documentos?',
+    answer: 'La solicitud será rechazada.'
+  },
+  {
+    question: '¿Cuántos archivos puedo adjuntar en la solicitud?',
+    answer: 'Solo un archivo PDF, por eso todos los documentos deben ir en uno solo.'
+  },
+  {
+    question: '¿Qué documento piden para cambio de direccion?',
+    answer: 'Recibo de luz o agua vigente.'
+  },
+  {
+    question: '¿Qué documento piden para cambio de representante legal?',
+    answer: 'Vigencia de poderes del nuevo representante (no mayor a 15 días).'
+  },
+  {
+    question: '¿Si cambio nombre o numero de DNI que pasa con contratos?',
+    answer: 'Se deben volver a firmar los documentos contractuales.'
+  },
+  {
+    question: '¿Quién puede ver el reporte de solicitudes de actualizacion?',
+    answer: 'Analista de Operaciones, Jefe de Oficina, Supervisor Regional de Operaciones, Coordinador de Operaciones y Asesor de Negocios.'
+  },
+  {
+    question: '¿Puedo quitar condicion PEP desde el sistema?',
+    answer: 'No. Se debe enviar correo al área SPLAF.'
+  },
+  {
+    question: '¿Puedo quitar condicion FATCA desde el sistema?',
+    answer: 'No. Se debe enviar correo a SPLAF.'
   }
 ];
 
@@ -335,7 +495,7 @@ function populateEvents() {
     ];
     
     let insertedCount = 0;
-    const numEvents = 35;
+    const numEvents = 80;
     
     for (let i = 0; i < numEvents; i++) {
       const timestamp = generateRandomDate();
