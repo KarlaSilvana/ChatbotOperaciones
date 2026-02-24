@@ -12,6 +12,25 @@ const dbPath = path.join(__dirname, '../../data/chatbot_metrics.db');
 let db = null;
 
 /**
+ * Configurar AWS S3 client
+ * En EC2: Usa IAM Role automáticamente (sin credenciales en .env)
+ * Localmente: Puede usar credenciales si existen
+ */
+function getS3Client() {
+  const config = {
+    region: process.env.AWS_REGION || 'us-east-1'
+  };
+
+  // Solo agregar credenciales si existen en el .env
+  if (process.env.AWS_ACCESS_KEY_ID && process.env.AWS_SECRET_ACCESS_KEY) {
+    config.accessKeyId = process.env.AWS_ACCESS_KEY_ID;
+    config.secretAccessKey = process.env.AWS_SECRET_ACCESS_KEY;
+  }
+
+  return new AWS.S3(config);
+}
+
+/**
  * Conectar a BD si no está conectada
  */
 function getDB() {
@@ -257,11 +276,7 @@ async function deleteContacto(id) {
  */
 async function getPresignedUrl(bucket, key, expiresIn = 3600) {
   try {
-    const s3 = new AWS.S3({
-      accessKeyId: process.env.AWS_ACCESS_KEY_ID,
-      secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
-      region: process.env.AWS_REGION || 'us-east-1'
-    });
+    const s3 = getS3Client();
 
     const url = s3.getSignedUrl('getObject', {
       Bucket: bucket,
@@ -280,11 +295,7 @@ async function getPresignedUrl(bucket, key, expiresIn = 3600) {
  */
 async function uploadToS3(buffer, bucket, key, mimetype) {
   try {
-    const s3 = new AWS.S3({
-      accessKeyId: process.env.AWS_ACCESS_KEY_ID,
-      secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
-      region: process.env.AWS_REGION || 'us-east-1'
-    });
+    const s3 = getS3Client();
 
     const params = {
       Bucket: bucket,
@@ -310,11 +321,7 @@ async function uploadToS3(buffer, bucket, key, mimetype) {
  */
 async function deleteFromS3(bucket, key) {
   try {
-    const s3 = new AWS.S3({
-      accessKeyId: process.env.AWS_ACCESS_KEY_ID,
-      secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
-      region: process.env.AWS_REGION || 'us-east-1'
-    });
+    const s3 = getS3Client();
 
     return new Promise((resolve, reject) => {
       s3.deleteObject(
