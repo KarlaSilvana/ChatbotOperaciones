@@ -6,7 +6,10 @@
 const express = require('express');
 const router = express.Router();
 const multer = require('multer');
+const { stringify } = require('csv-stringify/sync');
+const JSZip = require('jszip');
 const adminService = require('../services/adminService');
+const metricsService = require('../services/metricsService');
 
 // Configurar multer para upload de archivos
 const upload = multer({ storage: multer.memoryStorage() });
@@ -296,6 +299,80 @@ router.get('/latest-report', async (req, res) => {
     res.json({ success: true, data: report });
   } catch (err) {
     console.error('Error getting report:', err);
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+// ==================== EXPORT REPORTES ====================
+
+/**
+ * GET /admin/api/queries/count
+ * Contar consultas e interacciones para preview
+ */
+router.get('/queries/count', async (req, res) => {
+  try {
+    const { fromDate, toDate } = req.query;
+
+    if (!fromDate || !toDate) {
+      return res.status(400).json({ 
+        success: false, 
+        error: 'fromDate y toDate requeridas (YYYY-MM-DD)' 
+      });
+    }
+
+    const counts = await metricsService.getRecordCounts(fromDate, toDate);
+    res.json({ success: true, data: counts });
+  } catch (err) {
+    console.error('Error counting records:', err);
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+/**
+ * GET /admin/api/queries/export-all
+ * Exportar ambos CSVs en ZIP
+ */
+router.get('/queries/export-all', async (req, res) => {
+  try {
+    const { fromDate, toDate } = req.query;
+
+    if (!fromDate || !toDate) {
+      return res.status(400).json({ 
+        success: false, 
+        error: 'fromDate y toDate requeridas (YYYY-MM-DD)' 
+      });
+    }
+
+    // 1. Obtener datos de ambas tablas
+    const consultations = await metricsService.getIAConsultationsForExport(fromDate, toDate);
+    const events = await metricsService.getEventsForExport(fromDate, toDate);
+
+    // 2. Convertir a CSV
+    const csvConsultations = stringify(consultations, {
+      header: true,
+      columns: ['timestamp', 'phone_number', 'query_type', 'procedure_name', 'user_query', 'rag_response', 'ia_mode']
+    });
+
+    const csvEvents = stringify(events, {
+      header: true,
+      columns: ['timestamp', 'phone_number', 'event_type', 'procedure_name']
+    });
+
+    // 3. Crear ZIP con ambos CSVs
+    const zip = new JSZip();
+    zip.file(`consultas_ia_${fromDate}_${toDate}.csv`, csvConsultations);
+    zip.file(`eventos_generales_${fromDate}_${toDate}.csv`, csvEvents);
+
+    // 4. Generar buffer del ZIP
+    const buffer = await zip.generateAsync({ type: 'nodebuffer' });
+
+    // 5. Enviar ZIP
+    res.setHeader('Content-Type', 'application/zip');
+    res.setHeader('Content-Disposition', `attachment; filename="reporte_${fromDate}_${toDate}.zip"`);
+    res.send(buffer);
+
+  } catch (err) {
+    console.error('Error exporting data:', err);
     res.status(500).json({ success: false, error: err.message });
   }
 });

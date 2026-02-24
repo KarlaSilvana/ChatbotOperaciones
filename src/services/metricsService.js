@@ -197,6 +197,130 @@ async function getIAConsultationStats() {
 }
 
 /**
+ * Obtener consultas IA para exportar CSV (con query_type)
+ * @param {string} fromDate - Fecha inicio (YYYY-MM-DD)
+ * @param {string} toDate - Fecha fin (YYYY-MM-DD)
+ */
+async function getIAConsultationsForExport(fromDate, toDate) {
+  if (!db) {
+    await initializeDatabase();
+  }
+
+  return new Promise((resolve, reject) => {
+    const query = `
+      SELECT 
+        timestamp,
+        phone_number,
+        CASE 
+          WHEN procedure_name = 'Chat General' THEN 'general'
+          ELSE 'procedure'
+        END as query_type,
+        procedure_name,
+        user_query,
+        rag_response,
+        mode as ia_mode
+      FROM ia_consultations
+      WHERE query_date BETWEEN ? AND ?
+      ORDER BY timestamp DESC
+    `;
+    
+    db.all(query, [fromDate, toDate], (err, rows) => {
+      if (err) {
+        console.error('Error fetching IA consultations for export:', err);
+        reject(err);
+        return;
+      }
+      resolve(rows || []);
+    });
+  });
+}
+
+/**
+ * Obtener eventos para exportar CSV
+ * @param {string} fromDate - Fecha inicio (YYYY-MM-DD)
+ * @param {string} toDate - Fecha fin (YYYY-MM-DD)
+ */
+async function getEventsForExport(fromDate, toDate) {
+  if (!db) {
+    await initializeDatabase();
+  }
+
+  return new Promise((resolve, reject) => {
+    const query = `
+      SELECT 
+        timestamp,
+        phone_number,
+        event_type,
+        procedure_name
+      FROM interaction_events
+      WHERE DATE(timestamp) BETWEEN ? AND ?
+      ORDER BY timestamp DESC
+    `;
+    
+    db.all(query, [fromDate, toDate], (err, rows) => {
+      if (err) {
+        console.error('Error fetching events for export:', err);
+        reject(err);
+        return;
+      }
+      resolve(rows || []);
+    });
+  });
+}
+
+/**
+ * Contar consultas IA y eventos para preview
+ * @param {string} fromDate - Fecha inicio (YYYY-MM-DD)
+ * @param {string} toDate - Fecha fin (YYYY-MM-DD)
+ */
+async function getRecordCounts(fromDate, toDate) {
+  if (!db) {
+    await initializeDatabase();
+  }
+
+  return new Promise((resolve, reject) => {
+    let consultCount = 0;
+    let eventCount = 0;
+
+    // Contar consultas IA
+    db.get(
+      'SELECT COUNT(*) as count FROM ia_consultations WHERE query_date BETWEEN ? AND ?',
+      [fromDate, toDate],
+      (err, row) => {
+        if (err) {
+          reject(err);
+          return;
+        }
+        consultCount = row?.count || 0;
+
+        // Contar eventos
+        db.get(
+          'SELECT COUNT(*) as count FROM interaction_events WHERE DATE(timestamp) BETWEEN ? AND ?',
+          [fromDate, toDate],
+          (err, row) => {
+            if (err) {
+              reject(err);
+              return;
+            }
+            eventCount = row?.count || 0;
+
+            // Estimar tamaño (cada consulta ~2KB, cada evento ~200B)
+            const estimatedSizeKB = 
+              ((consultCount * 2) + (eventCount * 0.2)) / 1024;
+
+            resolve({
+              consultations: consultCount,
+              events: eventCount,
+              estimatedSizeKB: parseFloat(estimatedSizeKB.toFixed(1))
+            });
+          }
+        );
+      }
+    );
+  });
+}
+
+/**
  * Cerrar conexión a BD
  */
 function closeDatabase() {
@@ -242,6 +366,9 @@ module.exports = {
   recordIAConsultation,
   getInteractionStats,
   getIAConsultationStats,
+  getIAConsultationsForExport,
+  getEventsForExport,
+  getRecordCounts,
   closeDatabase,
   resetDatabase,
   initializeDatabase
