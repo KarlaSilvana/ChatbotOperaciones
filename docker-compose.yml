@@ -29,6 +29,11 @@ services:
       TZ: America/Lima
       LOG_LEVEL: info
     
+    # ⭐ VOLÚMENES PERSISTENTES - DATOS NO SE PIERDEN AL REINICIAR
+    volumes:
+      - chatbot_data:/app/data        # Base de datos (SQLite)
+      - chatbot_reports:/app/reports  # Reportes nightly
+    
     # Health check con wget (compatible con Alpine)
     healthcheck:
       test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:3000/health"]
@@ -58,6 +63,24 @@ services:
     # Red personalizada
     networks:
       - bot-network
+
+# ⭐ DEFINICIÓN DE VOLÚMENES PERSISTENTES
+volumes:
+  chatbot_data:
+    driver: local
+    name: chatbot_data_volume
+    driver_opts:
+      type: none
+      o: bind
+      device: /data/chatbot_data
+  
+  chatbot_reports:
+    driver: local
+    name: chatbot_reports_volume
+    driver_opts:
+      type: none
+      o: bind
+      device: /data/chatbot_reports
 
 # Definición de redes
 networks:
