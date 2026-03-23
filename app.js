@@ -96,9 +96,26 @@ app.post('/webhook/messages', async (req, res) => {
         const context = navigationManager.getIAContext(phoneNumber);
         const modoIA = respuesta.modoIA || navigationManager.getIAMode(phoneNumber);
         
-        // Llamar a RAG Service con o sin tema
+        // ⭐ NUEVO: Obtener conversation_id existente de la BD
+        const existingConversationId = await navigationManager.getConversationIdFromDb(phoneNumber);
+        
+        // Llamar a RAG Service con o sin tema, Y con conversation_id si existe
         const tema = modoIA === 'consulta' ? context.procedimientoNombre : null;
-        const ragResponse = await ragService.sendQuery(respuesta.text, tema);
+        const ragResponse = await ragService.sendQuery(respuesta.text, tema, existingConversationId);
+        
+        // ⭐ NUEVO: Guardar conversation_id en BD si los devuelve la API
+        if (ragResponse.conversation_id) {
+          const procedimientoId = modoIA === 'consulta' ? context.procedimientoId : null;
+          const procedimientoNombre = modoIA === 'consulta' ? context.procedimientoNombre : null;
+          await navigationManager.storeConversationIdToDb(
+            phoneNumber, 
+            ragResponse.conversation_id, 
+            modoIA, 
+            procedimientoId, 
+            procedimientoNombre
+          );
+          logger.info(`✓ Conversation ID stored for ${phoneNumber}`);
+        }
         
         // ⭐ REGISTRAR CONSULTA DE IA EN METRICS
         const procedimientoId = modoIA === 'consulta' ? context.procedimientoId : 'general_chat';

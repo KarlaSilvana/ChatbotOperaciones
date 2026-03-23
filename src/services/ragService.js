@@ -26,9 +26,10 @@ class RAGService {
    * Envía una consulta a la API RAG
    * @param {string} mensaje - Pregunta del usuario
    * @param {string} tema - Tema/contexto opcional (ej: nombre de procedimiento)
-   * @returns {Promise<object>} Respuesta de la API RAG
+   * @param {string} conversationId - ID de conversación para mantener contexto (opcional)
+   * @returns {Promise<object>} Respuesta de la API RAG con conversation_id
    */
-  async sendQuery(mensaje, tema = null) {
+  async sendQuery(mensaje, tema = null, conversationId = null) {
     try {
       // Validar entrada
       if (!mensaje || typeof mensaje !== 'string') {
@@ -39,6 +40,9 @@ class RAGService {
       const mensajeFinal = tema ? `${tema}: ${mensaje}` : mensaje;
 
       logger.info(`📤 Enviando consulta RAG: "${mensajeFinal.substring(0, 100)}..."`);
+      if (conversationId) {
+        logger.info(`💬 Conversation ID: ${conversationId}`);
+      }
 
       // Preparar payload
       const payload = {
@@ -48,6 +52,11 @@ class RAGService {
         top_k: this.topK,
         model: this.model
       };
+
+      // Agregar conversation_id si existe
+      if (conversationId) {
+        payload.conversation_id = conversationId;
+      }
 
       // Realizar llamada HTTP
       const startTime = Date.now();
@@ -60,6 +69,12 @@ class RAGService {
       // Validar respuesta
       if (!response.response) {
         throw new Error('Respuesta vacía de la API RAG');
+      }
+
+      // Si la API devuelve conversation_id, lo retornamos
+      // Si no lo devuelve, pero lo enviamos, lo retornamos igual
+      if (!response.conversation_id && conversationId) {
+        response.conversation_id = conversationId;
       }
 
       return response;

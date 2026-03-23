@@ -169,6 +169,7 @@ class DirectorioService {
         return {
           resultados: [],
           totalEncontrados: 0,
+          
           hayMas: false,
           error: 'Por favor ingreda criterios de búsqueda válidos'
         };

@@ -81,6 +81,23 @@ function initializeDatabase() {
             oficina TEXT,
             establecimiento TEXT
           )
+        `);
+
+        // Crear tabla user_conversation_sessions (para persistencia de conversation_id)
+        db.run(`
+          CREATE TABLE IF NOT EXISTS user_conversation_sessions (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            phone_number TEXT NOT NULL UNIQUE,
+            conversation_id TEXT NOT NULL,
+            modo TEXT,
+            procedimiento_id TEXT,
+            procedimiento_nombre TEXT,
+            created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+            last_activity DATETIME DEFAULT CURRENT_TIMESTAMP,
+            expires_at DATETIME,
+            status TEXT DEFAULT 'active',
+            message_count INTEGER DEFAULT 1
+          )
         `, (err) => {
           if (err) {
             console.error('Error creating admin tables:', err);
@@ -361,6 +378,143 @@ function resetDatabase() {
 // Inicializar DB al importar el módulo
 initializeDatabase().catch(err => console.error('Failed to initialize DB on import:', err));
 
+/**
+ * Guardar o actualizar conversation_id de una sesión de usuario
+ * @param {string} phoneNumber - Número de teléfono del usuario
+ * @param {string} conversationId - conversation_id devuelto por RAG API
+ * @param {string} modo - Modo IA ('consulta', 'general_chat', etc.)
+ * @param {string} procedimientoId - ID del procedimiento (opcional)
+ * @param {string} procedimientoNombre - Nombre del procedimiento (opcional)
+ */
+async function storeConversationId(phoneNumber, conversationId, modo, procedimientoId = null, procedimientoNombre = null) {
+  if (!db) {
+    await initializeDatabase();
+  }
+
+  return new Promise((resolve) => {
+    // Usar timestamp en milisegundos (30 minutos en el futuro)
+    const expiresAt = Date.now() + (30 * 60 * 1000);
+    
+    const stmt = db.prepare(`
+      INSERT INTO user_conversation_sessions 
+      (phone_number, conversation_id, modo, procedimiento_id, procedimiento_nombre, expires_at, status)
+      VALUES (?, ?, ?, ?, ?, ?, 'active')
+      ON CONFLICT(phone_number) DO UPDATE SET
+        conversation_id = excluded.conversation_id,
+        modo = excluded.modo,
+        procedimiento_id = excluded.procedimiento_id,
+        procedimiento_nombre = excluded.procedimiento_nombre,
+        last_activity = CURRENT_TIMESTAMP,
+        expires_at = excluded.expires_at,
+        message_count = message_count + 1
+    `);
+
+    stmt.run([phoneNumber, conversationId, modo, procedimientoId, procedimientoNombre, expiresAt], (err) => {
+      if (err) {
+        console.error('Error storing conversation_id:', err);
+      } else {
+        console.log(`✓ Conversation session stored/updated for ${phoneNumber}`);
+      }
+      stmt.finalize();
+      resolve();
+    });
+  });
+}
+
+/**
+ * Obtener conversation_id de una sesión activa
+ * @param {string} phoneNumber - Número de teléfono del usuario
+ * @returns {Promise<string|null>} conversation_id o null si no existe
+ */
+async function getConversationId(phoneNumber) {
+  if (!db) {
+    await initializeDatabase();
+  }
+
+  return new Promise((resolve) => {
+    const now = Date.now();
+    db.get(
+      `SELECT conversation_id FROM user_conversation_sessions 
+       WHERE phone_number = ? AND status = 'active' AND expires_at > ?`,
+      [phoneNumber, now],
+      (err, row) => {
+        if (err) {
+          console.error('Error fetching conversation_id:', err);
+          resolve(null);
+          return;
+        }
+        
+        if (row) {
+          // Actualizar last_activity
+          db.run(
+            'UPDATE user_conversation_sessions SET last_activity = CURRENT_TIMESTAMP WHERE phone_number = ?',
+            [phoneNumber]
+          );
+          resolve(row.conversation_id);
+        } else {
+          resolve(null);
+        }
+      }
+    );
+  });
+}
+
+/**
+ * Archivar sesión de conversación (cuando el usuario vuelve al menú)
+ * @param {string} phoneNumber - Número de teléfono del usuario
+ */
+async function archiveConversationSession(phoneNumber) {
+  if (!db) {
+    await initializeDatabase();
+  }
+
+  return new Promise((resolve) => {
+    const stmt = db.prepare(`
+      UPDATE user_conversation_sessions 
+      SET status = 'archived', expires_at = CURRENT_TIMESTAMP
+      WHERE phone_number = ? AND status = 'active'
+    `);
+
+    stmt.run([phoneNumber], (err) => {
+      if (err) {
+        console.error('Error archiving conversation session:', err);
+      } else {
+        console.log(`✓ Conversation session archived for ${phoneNumber}`);
+      }
+      stmt.finalize();
+      resolve();
+    });
+  });
+}
+
+/**
+ * Limpiar sesiones expiradas de la BD
+ */
+async function cleanupExpiredSessions() {
+  if (!db) {
+    await initializeDatabase();
+  }
+
+  return new Promise((resolve) => {
+    const now = Date.now();
+    const sevenDaysAgo = now - (7 * 24 * 60 * 60 * 1000);
+    db.run(
+      `DELETE FROM user_conversation_sessions 
+       WHERE expires_at <= ? OR 
+       (status = 'archived' AND expires_at < ?)`,
+      [now, sevenDaysAgo],
+      (err) => {
+        if (err) {
+          console.error('Error cleaning up expired sessions:', err);
+        } else {
+          console.log('✓ Expired conversation sessions cleaned up');
+        }
+        resolve();
+      }
+    );
+  });
+}
+
 module.exports = {
   recordEvent,
   recordIAConsultation,
@@ -371,5 +525,9 @@ module.exports = {
   getRecordCounts,
   closeDatabase,
   resetDatabase,
-  initializeDatabase
+  initializeDatabase,
+  storeConversationId,
+  getConversationId,
+  archiveConversationSession,
+  cleanupExpiredSessions
 };

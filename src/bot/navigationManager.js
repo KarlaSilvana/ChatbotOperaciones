@@ -429,6 +429,12 @@ class NavigationManager {
     state.navigationStack = ['principal'];
     state.currentMenu = 'principal';
     this.userStates.set(userId, state);
+    
+    // ⭐ NUEVO: Archivar sesión de conversación en background (no bloquear)
+    this.archiveConversationIdFromDb(userId).catch(err => 
+      console.error(`Error archiving conversation for ${userId}:`, err)
+    );
+    
     return true;
   }
 
@@ -485,6 +491,68 @@ class NavigationManager {
     state.currentMenu = 'principal';
     this.userStates.set(userId, state);
     return true;
+  }
+
+  /**
+   * Guardar conversation_id en base de datos (persistencia)
+   * @param {string} userId - ID del usuario (phone_number)
+   * @param {string} conversationId - conversation_id devuelto por RAG
+   * @param {string} modo - Modo IA ('consulta', 'general_chat', etc.)
+   * @param {string} procedimientoId - ID del procedimiento (opcional)
+   * @param {string} procedimientoNombre - Nombre del procedimiento (opcional)
+   */
+  async storeConversationIdToDb(userId, conversationId, modo, procedimientoId = null, procedimientoNombre = null) {
+    try {
+      const metricsService = require('../services/metricsService');
+      await metricsService.storeConversationId(userId, conversationId, modo, procedimientoId, procedimientoNombre);
+      
+      // Guardar en memoria también para acceso rápido
+      const state = this.getUserState(userId);
+      state.context.currentConversationId = conversationId;
+      this.userStates.set(userId, state);
+      
+      return true;
+    } catch (error) {
+      console.error('Error storing conversation_id to DB:', error);
+      return false;
+    }
+  }
+
+  /**
+   * Obtener conversation_id desde la base de datos
+   * @param {string} userId - ID del usuario (phone_number)
+   * @returns {Promise<string|null>} conversation_id o null si no existe
+   */
+  async getConversationIdFromDb(userId) {
+    try {
+      const metricsService = require('../services/metricsService');
+      const conversationId = await metricsService.getConversationId(userId);
+      return conversationId;
+    } catch (error) {
+      console.error('Error fetching conversation_id from DB:', error);
+      return null;
+    }
+  }
+
+  /**
+   * Archivar conversation_id cuando el usuario sale del modo IA
+   * @param {string} userId - ID del usuario (phone_number)
+   */
+  async archiveConversationIdFromDb(userId) {
+    try {
+      const metricsService = require('../services/metricsService');
+      await metricsService.archiveConversationSession(userId);
+      
+      // Limpiar de memoria también
+      const state = this.getUserState(userId);
+      state.context.currentConversationId = null;
+      this.userStates.set(userId, state);
+      
+      return true;
+    } catch (error) {
+      console.error('Error archiving conversation_id from DB:', error);
+      return false;
+    }
   }
 }
 
