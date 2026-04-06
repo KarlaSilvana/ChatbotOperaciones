@@ -34,7 +34,7 @@ describe('MenusConfig Module', () => {
     it('debe contener el texto correcto en el menú', () => {
       const menu = MenusConfig.getMenuPrincipal();
       expect(menu.text).toContain('¡Hola!');
-      expect(menu.text).toContain('AndyBot');
+      expect(menu.text).toContain('Chispa');
     });
   });
 

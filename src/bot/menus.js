@@ -31,7 +31,7 @@ class MenusConfig {
   getMenuPrincipal() {
     return {
       id: 'principal',
-      text: `👋 *¡Hola!* Gracias por contactar con *AndyBot* de Caja Los Andes 🏢😁
+      text: `👋 *¡Hola!* Gracias por contactar con *Chispa 🐹* de Caja Los Andes 🏢😁
 
 ¿En qué puedo ayudarte?
 

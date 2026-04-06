@@ -49,7 +49,7 @@ app.get('/health', (req, res) => {
   res.json({ 
     status: 'OK', 
     timestamp: new Date(),
-    service: 'AndyBot - Caja Los Andes',
+    service: 'Chispa 🐹 - Caja Los Andes',
     multimedia: s3Service.getInfo()
   });
 });
@@ -69,7 +69,17 @@ app.post('/webhook/messages', async (req, res) => {
     // Extraer número de teléfono sin prefijo de WhatsApp
     const phoneNumber = from.replace('whatsapp:', '');
 
-    // Procesar el mensaje y obtener respuesta
+    // ⭐ VALIDACIÓN: Verificar que el número está en el directorio
+    const bdPhoneFormat = phoneNumber.slice(-9); // Extraer últimos 9 dígitos (sin +51)
+    const isValidPhone = await directorioService.validarTelefonoEnDirectorio(bdPhoneFormat);
+    
+    if (!isValidPhone) {
+      // Número NO registrado en directorio - Silencio total (sin sesión, sin respuesta)
+      logger.warning(`[BLOCKED] Acceso denegado - Número no en directorio: ${phoneNumber}`);
+      return res.status(200).send('Message processed'); // ← Twilio ve OK, pero no procesamos
+    }
+
+    // Procesar el mensaje y obtener respuesta (SOLO si número es válido)
     const respuesta = await procesarMensaje(phoneNumber, incoming_msg);
 
     // Manejar sesión expirada
@@ -201,7 +211,7 @@ app.post('/webhook/messages', async (req, res) => {
       }
     }
 
-    // ⭐ NUEVO: Manejar búsqueda en directorio
+    // ⭐ MANEJAR BÚSQUEDA EN DIRECTORIO (con OpenAI)
     if (respuesta.action === 'directorio_search') {
       try {
         // ⭐ Actualizar actividad del usuario
@@ -211,10 +221,29 @@ app.post('/webhook/messages', async (req, res) => {
         metricsService.recordEvent(phoneNumber, 'USER_SEARCH_DIRECTORIO', null, 'Directorio')
           .catch(err => logger.error('Error recording directorio search:', err));
         
-        // Realizar búsqueda
-        const busqueda = directorioService.buscar(respuesta.query);
+        // Realizar búsqueda (ASYNC - Fase 4 con OpenAI)
+        const busqueda = await directorioService.buscar(respuesta.query);
 
-        // Caso 1: Sin resultados
+        // Caso: Error en búsqueda (ej: OpenAI no disponible, query inválida)
+        if (busqueda.error) {
+          const mensajeError = `❌ ${busqueda.error}\n\n` +
+            '🔍 Intenta reformular tu búsqueda\n' +
+            '🔙 0. Volver al Menú Principal 🏠';
+
+          await twilio_client.messages.create({
+            from: to,
+            to: from,
+            body: mensajeError
+          });
+
+          logger.warning(
+            `[DirectorioSearch] Error en búsqueda: "${respuesta.query}" - ${busqueda.error}`
+          );
+          res.status(200).send('Message processed');
+          return;
+        }
+
+        // Caso: Sin resultados
         if (busqueda.resultados.length === 0) {
           const mensajeNoResultados = DirectorioRouter.getNoResultsMessage();
           await twilio_client.messages.create({
@@ -230,16 +259,16 @@ app.post('/webhook/messages', async (req, res) => {
           return;
         }
 
-        // Caso 2: Con resultados
+        // Caso: Con resultados (LIMIT 3)
         const contenidoResultados = DirectorioFormatter.formatearResultadosConEncabezado(
           busqueda.resultados,
           busqueda.totalEncontrados,
-          busqueda.hayMas
+          false // No hay "más" porque limitamos a 3
         );
 
         const mensajeFinal = DirectorioFormatter.formatearMensajeFinal(
           contenidoResultados,
-          busqueda.hayMas
+          false
         );
 
         await twilio_client.messages.create({
@@ -249,16 +278,15 @@ app.post('/webhook/messages', async (req, res) => {
         });
 
         logger.success(
-          `[DirectorioSearch] Búsqueda exitosa: "${respuesta.query}" → ` +
-          `${busqueda.resultados.length} resultado(s), ` +
-          `total encontrado: ${busqueda.totalEncontrados} para ${from}`
+          `[DirectorioSearch] Búsqueda exitosa (IA): "${respuesta.query}" → ` +
+          `${busqueda.resultados.length} resultado(s) para ${from}`
         );
 
         res.status(200).send('Message processed');
         return;
 
       } catch (dirError) {
-        logger.error('[DirectorioSearch] Error en búsqueda:', dirError);
+        logger.error('[DirectorioSearch] Error inesperado:', dirError);
 
         const errorMessage =
           '❌ Error en la búsqueda del directorio.\n' +
@@ -417,7 +445,7 @@ app.get('/webhook/messages', (req, res) => {
  */
 app.get('/', (req, res) => {
   res.json({
-    name: 'AndyBot - Caja Los Andes',
+    name: 'Chispa 🐹 - Caja Los Andes',
     version: '2.0.0',
     status: 'running',
     webhook: '/webhook/messages',

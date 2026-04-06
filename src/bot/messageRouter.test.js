@@ -16,7 +16,7 @@ describe('MessageRouter - Navigation Integration', () => {
     it('debe mostrar menú sin error para primer mensaje inválido', async () => {
       const respuesta = await procesarMensaje(testUserId, 'hola');
       expect(respuesta.text).toContain('¡Hola!');
-      expect(respuesta.text).toContain('AndyBot');
+      expect(respuesta.text).toContain('Chispa');
       expect(respuesta.action).toBe('navigate');
       expect(respuesta.text).not.toContain('Opción no válida');
     });
