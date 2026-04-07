@@ -136,7 +136,7 @@ app.post('/webhook/messages', async (req, res) => {
           procedimientoNombre,
           modoIA,
           respuesta.text,
-          ragResponse.response
+          ragResponse
         ).catch(err => logger.error('Error recording IA consultation:', err));
         
         // Agregar mensaje de usuario al historial

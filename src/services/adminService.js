@@ -141,65 +141,73 @@ async function deleteProcedimiento(id) {
 async function getDirectorio(page = 1, search = '', region = '', perPage = 50) {
   const db = await getDB();
 
-  let query = 'SELECT * FROM directorio WHERE 1=1';
+  // Construir WHERE clause dinámicamente (una sola vez)
+  let whereClause = '';
   const params = [];
 
   if (search) {
-    query += ' AND nombreCompleto LIKE ?';
+    whereClause += ' AND nombreCompleto LIKE ?';
     params.push(`%${search}%`);
   }
 
   if (region) {
-    query += ' AND region = ?';
+    whereClause += ' AND region = ?';
     params.push(region);
   }
 
-  // Contar total
   return new Promise((resolve, reject) => {
-    const countQuery = `SELECT COUNT(*) as total FROM directorio WHERE 1=1`;
-    const countParams = [];
+    // PASO 1: Contar total de registros
+    const countSql = `SELECT COUNT(*) as total FROM directorio WHERE 1=1${whereClause}`;
+    
+    db.get(countSql, params, (err, countRow) => {
+      if (err) {
+        reject(err);
+        return;
+      }
 
-    if (search) {
-      countQuery += ' AND nombreCompleto LIKE ?';
-      countParams.push(`%${search}%`);
-    }
+      const total = countRow?.total || 0;
+      const offset = (page - 1) * perPage;
 
-    if (region) {
-      countQuery += ' AND region = ?';
-      countParams.push(region);
-    }
+      // PASO 2: Obtener registros con paginación
+      const dataSql = `SELECT * FROM directorio WHERE 1=1${whereClause} ORDER BY nombreCompleto LIMIT ? OFFSET ?`;
+      const dataParams = [...params, perPage, offset];
 
-    db.get(
-      countQuery.replace('WHERE 1=1', search || region ? 'WHERE 1=1' : 'WHERE 1=1') +
-        (search ? ' AND nombreCompleto LIKE ?' : '') +
-        (region ? ' AND region = ?' : ''),
-      [...(search ? [`%${search}%`] : []), ...(region ? [region] : [])],
-      (err, countRow) => {
+      db.all(dataSql, dataParams, (err, rows) => {
         if (err) {
           reject(err);
-          return;
+        } else {
+          resolve({
+            data: rows || [],
+            pagination: {
+              page,
+              perPage,
+              total,
+              totalPages: Math.ceil(total / perPage)
+            }
+          });
         }
+      });
+    });
+  });
+}
 
-        const total = countRow?.total || 0;
-        const offset = (page - 1) * perPage;
-
-        query += ` ORDER BY nombreCompleto LIMIT ? OFFSET ?`;
-        params.push(perPage, offset);
-
-        db.all(query, params, (err, rows) => {
-          if (err) reject(err);
-          else {
-            resolve({
-              data: rows || [],
-              pagination: {
-                page,
-                perPage,
-                total,
-                totalPages: Math.ceil(total / perPage)
-              }
-            });
-          }
-        });
+/**
+ * Obtener todas las regiones únicas del directorio
+ * Se usa para cargar dinámicamente los selectores de región
+ */
+async function getRegiones() {
+  const db = await getDB();
+  return new Promise((resolve, reject) => {
+    db.all(
+      'SELECT DISTINCT region FROM directorio WHERE region IS NOT NULL AND region != "" ORDER BY region',
+      [],
+      (err, rows) => {
+        if (err) {
+          reject(err);
+        } else {
+          const regiones = (rows || []).map(r => r.region).filter(r => r);
+          resolve(regiones);
+        }
       }
     );
   });
@@ -372,6 +380,7 @@ module.exports = {
 
   // Directorio
   getDirectorio,
+  getRegiones,
   getContactoById,
   createContacto,
   updateContacto,

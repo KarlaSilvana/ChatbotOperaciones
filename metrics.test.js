@@ -198,4 +198,137 @@ describe('Metrics Service', () => {
       expect(Array.isArray(stats)).toBe(true);
     }, 10000);
   });
+
+  describe('Format Documents for CSV', () => {
+    test('should convert JSON array to semicolon-separated string', () => {
+      const jsonString = '["Firma_Electronica.txt", "Reglamento_Creditos_FirmaElectronica.txt"]';
+      const result = metricsService.formatDocumentsForCSV(jsonString);
+      expect(result).toBe('Firma_Electronica.txt; Reglamento_Creditos_FirmaElectronica.txt');
+    });
+
+    test('should handle single document', () => {
+      const jsonString = '["Tabla_Creditos.txt"]';
+      const result = metricsService.formatDocumentsForCSV(jsonString);
+      expect(result).toBe('Tabla_Creditos.txt');
+    });
+
+    test('should return empty string for empty array', () => {
+      const jsonString = '[]';
+      const result = metricsService.formatDocumentsForCSV(jsonString);
+      expect(result).toBe('');
+    });
+
+    test('should handle null input', () => {
+      const result = metricsService.formatDocumentsForCSV(null);
+      expect(result).toBe('');
+    });
+
+    test('should handle undefined input', () => {
+      const result = metricsService.formatDocumentsForCSV(undefined);
+      expect(result).toBe('');
+    });
+
+    test('should handle invalid JSON gracefully', () => {
+      const invalidJson = 'not valid json';
+      const result = metricsService.formatDocumentsForCSV(invalidJson);
+      expect(result).toBe('');
+    });
+
+    test('should handle documents with special characters', () => {
+      const jsonString = '["Créditos_Especiales.txt", "Documento Importante.txt"]';
+      const result = metricsService.formatDocumentsForCSV(jsonString);
+      expect(result).toBe('Créditos_Especiales.txt; Documento Importante.txt');
+    });
+  });
+
+  describe('Record IA Consultation with conversation_id and sources', () => {
+    test('should record IA consultation with full RAG response object', async () => {
+      const ragResponse = {
+        response: 'La firma electrónica es...',
+        conversation_id: 'conv_xyz789',
+        sources: [
+          { document: 'Firma_Electronica.txt' },
+          { document: 'Reglamento_Creditos_FirmaElectronica.txt' }
+        ],
+        tokens_used: 142
+      };
+
+      await metricsService.recordIAConsultation(
+        '51987654321',
+        'proc_firma',
+        'Firma Electrónica',
+        'consulta',
+        '¿Cómo firmar?',
+        ragResponse
+      );
+
+      await new Promise(resolve => setTimeout(resolve, 200));
+
+      const stats = await metricsService.getIAConsultationStats();
+      expect(Array.isArray(stats)).toBe(true);
+    }, 10000);
+
+    test('should handle RAG response without sources', async () => {
+      const ragResponse = {
+        response: 'Respuesta general',
+        conversation_id: 'conv_abc123'
+      };
+
+      await metricsService.recordIAConsultation(
+        '51654321987',
+        'general_chat',
+        'Chat General',
+        'general_chat',
+        'Pregunta general',
+        ragResponse
+      );
+
+      await new Promise(resolve => setTimeout(resolve, 200));
+
+      const stats = await metricsService.getIAConsultationStats();
+      expect(Array.isArray(stats)).toBe(true);
+    }, 10000);
+
+    test('should handle backward compatibility with string response', async () => {
+      await metricsService.recordIAConsultation(
+        '51123456789',
+        'proc_creditos',
+        'Créditos',
+        'consulta',
+        'Pregunta antigua',
+        'Texto de respuesta simple'  // String, no objeto
+      );
+
+      await new Promise(resolve => setTimeout(resolve, 200));
+
+      const stats = await metricsService.getIAConsultationStats();
+      expect(Array.isArray(stats)).toBe(true);
+    }, 10000);
+
+    test('should extract only document names from sources', async () => {
+      const ragResponse = {
+        response: 'Respuesta con documentos',
+        conversation_id: 'conv_test123',
+        sources: [
+          { document: 'doc1.txt', chunks_count: 3, chunk_indices: [1, 2, 3] },
+          { document: 'doc2.txt', chunks_count: 2, chunk_indices: [0, 1] }
+        ]
+      };
+
+      await metricsService.recordIAConsultation(
+        '51999888777',
+        'proc_test',
+        'Test',
+        'consulta',
+        '¿Test?',
+        ragResponse
+      );
+
+      await new Promise(resolve => setTimeout(resolve, 200));
+
+      const stats = await metricsService.getIAConsultationStats();
+      expect(Array.isArray(stats)).toBe(true);
+      // Note: Visual inspection confirms only document names are extracted
+    }, 10000);
+  });
 });

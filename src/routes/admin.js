@@ -149,6 +149,20 @@ router.get('/directorio/:id', async (req, res) => {
 });
 
 /**
+ * GET /admin/api/regions
+ * Obtener lista de regiones únicas del directorio
+ */
+router.get('/regions', async (req, res) => {
+  try {
+    const regiones = await adminService.getRegiones();
+    res.json({ success: true, data: regiones });
+  } catch (err) {
+    console.error('Error getting regions:', err);
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+/**
  * POST /admin/api/directorio
  * Crear contacto
  */
@@ -347,10 +361,16 @@ router.get('/queries/export-all', async (req, res) => {
     const consultations = await metricsService.getIAConsultationsForExport(fromDate, toDate);
     const events = await metricsService.getEventsForExport(fromDate, toDate);
 
-    // 2. Convertir a CSV
-    const csvConsultations = stringify(consultations, {
+    // 2. Transformar document_sources de JSON a string para CSV
+    const consultationsForCSV = consultations.map(row => ({
+      ...row,
+      document_sources: metricsService.formatDocumentsForCSV(row.document_sources)
+    }));
+
+    // 3. Convertir a CSV
+    const csvConsultations = stringify(consultationsForCSV, {
       header: true,
-      columns: ['timestamp', 'phone_number', 'query_type', 'procedure_name', 'user_query', 'rag_response', 'ia_mode']
+      columns: ['timestamp', 'phone_number', 'conversation_id', 'document_sources', 'query_type', 'procedure_name', 'user_query', 'rag_response', 'ia_mode']
     });
 
     const csvEvents = stringify(events, {
@@ -358,15 +378,15 @@ router.get('/queries/export-all', async (req, res) => {
       columns: ['timestamp', 'phone_number', 'event_type', 'procedure_name']
     });
 
-    // 3. Crear ZIP con ambos CSVs
+    // 4. Crear ZIP con ambos CSVs
     const zip = new JSZip();
     zip.file(`consultas_ia_${fromDate}_${toDate}.csv`, csvConsultations);
     zip.file(`eventos_generales_${fromDate}_${toDate}.csv`, csvEvents);
 
-    // 4. Generar buffer del ZIP
+    // 5. Generar buffer del ZIP
     const buffer = await zip.generateAsync({ type: 'nodebuffer' });
 
-    // 5. Enviar ZIP
+    // 6. Enviar ZIP
     res.setHeader('Content-Type', 'application/zip');
     res.setHeader('Content-Disposition', `attachment; filename="reporte_${fromDate}_${toDate}.zip"`);
     res.send(buffer);

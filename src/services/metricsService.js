@@ -54,6 +54,8 @@ function initializeDatabase() {
             user_query TEXT,
             rag_response TEXT,
             response_length INTEGER,
+            conversation_id TEXT,
+            document_sources TEXT,
             query_date DATE,
             timestamp DATETIME DEFAULT CURRENT_TIMESTAMP
           )
@@ -105,9 +107,46 @@ function initializeDatabase() {
             return;
           }
           console.log('✓ Database initialized successfully with admin tables');
-          resolve(true);
+          
+          // ⭐ MIGRACIÓN: Agregar nuevas columnas si no existen
+          runMigrations(db, resolve, reject);
         });
       });
+    });
+  });
+}
+
+/**
+ * Ejecutar migraciones de esquema (agregar nuevas columnas)
+ * @private
+ */
+function runMigrations(db, resolve, reject) {
+  // Migración 1: Agregar conversation_id a ia_consultations
+  db.run(`
+    ALTER TABLE ia_consultations 
+    ADD COLUMN conversation_id TEXT
+  `, (err) => {
+    if (err && !err.message.includes('duplicate column')) {
+      console.error('⚠️ Error adding conversation_id column:', err.message);
+      // No es fatal, continuamos
+    } else if (!err) {
+      console.log('✓ Added conversation_id column to ia_consultations');
+    }
+    
+    // Migración 2: Agregar document_sources a ia_consultations
+    db.run(`
+      ALTER TABLE ia_consultations 
+      ADD COLUMN document_sources TEXT
+    `, (err) => {
+      if (err && !err.message.includes('duplicate column')) {
+        console.error('⚠️ Error adding document_sources column:', err.message);
+        // No es fatal, continuamos
+      } else if (!err) {
+        console.log('✓ Added document_sources column to ia_consultations');
+      }
+      
+      // Resolver cuando todas las migraciones estén completas
+      resolve(true);
     });
   });
 }
@@ -140,6 +179,12 @@ async function recordEvent(phoneNumber, eventType, procedimientoId = null, proce
 
 /**
  * Registrar consulta de IA con respuesta completa
+ * @param {string} phoneNumber - Número de teléfono del usuario
+ * @param {string} procedimientoId - ID del procedimiento
+ * @param {string} procedimientoNombre - Nombre del procedimiento
+ * @param {string} mode - Modo IA (consulta, general_chat, etc)
+ * @param {string} userQuery - Pregunta del usuario
+ * @param {object} ragResponse - Objeto completo de respuesta RAG con: response, conversation_id, sources
  */
 async function recordIAConsultation(phoneNumber, procedimientoId, procedimientoNombre, mode, userQuery, ragResponse) {
   if (!db) {
@@ -147,19 +192,42 @@ async function recordIAConsultation(phoneNumber, procedimientoId, procedimientoN
   }
 
   return new Promise((resolve) => {
-    const responseLength = ragResponse ? ragResponse.length : 0;
+    // Extraer datos del objeto ragResponse
+    let responseText = '';
+    let conversationId = null;
+    let documentSourcesJSON = '[]';
+
+    if (typeof ragResponse === 'string') {
+      // Backward compatibility: si se pasa solo string (response text)
+      responseText = ragResponse;
+    } else if (typeof ragResponse === 'object' && ragResponse !== null) {
+      // Objeto con datos completos
+      responseText = ragResponse.response || '';
+      conversationId = ragResponse.conversation_id || null;
+      
+      // Extraer solo nombres de documentos de sources
+      if (ragResponse.sources && Array.isArray(ragResponse.sources)) {
+        const documentNames = ragResponse.sources
+          .map(source => source.document)
+          .filter(doc => doc && doc.trim());
+        documentSourcesJSON = JSON.stringify(documentNames);
+      }
+    }
+
+    const responseLength = responseText ? responseText.length : 0;
     const queryDate = new Date().toISOString().split('T')[0];
 
     const stmt = db.prepare(`
       INSERT INTO ia_consultations (
         phone_number, procedimiento_id, procedimiento_nombre, mode, 
-        user_query, rag_response, response_length, query_date
+        user_query, rag_response, response_length, conversation_id, 
+        document_sources, query_date
       )
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `);
 
     stmt.run(
-      [phoneNumber, procedimientoId, procedimientoNombre, mode, userQuery, ragResponse, responseLength, queryDate],
+      [phoneNumber, procedimientoId, procedimientoNombre, mode, userQuery, responseText, responseLength, conversationId, documentSourcesJSON, queryDate],
       (err) => {
         if (err) {
           console.error('Error recording IA consultation:', err);
@@ -228,6 +296,8 @@ async function getIAConsultationsForExport(fromDate, toDate) {
       SELECT 
         timestamp,
         phone_number,
+        conversation_id,
+        document_sources,
         CASE 
           WHEN procedimiento_nombre = 'Chat General' THEN 'general'
           ELSE 'procedure'
@@ -515,6 +585,29 @@ async function cleanupExpiredSessions() {
   });
 }
 
+/**
+ * Convertir document_sources JSON a string separado por semicolon para CSV
+ * Ejemplo: '["doc1.txt", "doc2.txt"]' -> "doc1.txt; doc2.txt"
+ * @param {string} documentSourcesJSON - JSON string del array de documentos
+ * @returns {string} Documentos separados por semicolon, o string vacío si no hay docs
+ */
+function formatDocumentsForCSV(documentSourcesJSON) {
+  if (!documentSourcesJSON || documentSourcesJSON === '[]' || documentSourcesJSON === null) {
+    return '';
+  }
+  
+  try {
+    const docs = JSON.parse(documentSourcesJSON);
+    if (!Array.isArray(docs) || docs.length === 0) {
+      return '';
+    }
+    return docs.join('; '); // "doc1.txt; doc2.txt; doc3.txt"
+  } catch (e) {
+    console.error('Error parsing document_sources JSON:', e);
+    return '';
+  }
+}
+
 module.exports = {
   recordEvent,
   recordIAConsultation,
@@ -529,5 +622,6 @@ module.exports = {
   storeConversationId,
   getConversationId,
   archiveConversationSession,
-  cleanupExpiredSessions
+  cleanupExpiredSessions,
+  formatDocumentsForCSV
 };

@@ -9,7 +9,10 @@ let currentEditId = null;
 let deleteConfirmId = null;
 
 // Cargar al iniciar
-document.addEventListener('DOMContentLoaded', () => loadDirectorio(1));
+document.addEventListener('DOMContentLoaded', () => {
+  loadRegiones();
+  loadDirectorio(1);
+});
 
 async function loadDirectorio(page) {
   try {
@@ -96,6 +99,36 @@ function renderPagination(pagination) {
   }
 }
 
+async function loadRegiones() {
+  try {
+    const res = await fetch('/admin/api/regions');
+    const data = await res.json();
+    
+    if (!data.success) throw new Error('Error cargando regiones');
+    
+    const regionSelect = document.getElementById('contactRegion');
+    const currentValue = regionSelect.value;
+    
+    // Limpiar opciones excepto la primera
+    const firstOption = regionSelect.options[0];
+    regionSelect.innerHTML = '';
+    regionSelect.appendChild(firstOption);
+    
+    // Agregar regiones dinámicamente
+    data.data.forEach(region => {
+      const option = document.createElement('option');
+      option.value = region;
+      option.textContent = region;
+      regionSelect.appendChild(option);
+    });
+    
+    // Restaurar valor si existía
+    regionSelect.value = currentValue;
+  } catch(err) {
+    console.error('Error loading regions:', err);
+  }
+}
+
 function handleSearch() {
   currentSearch = document.getElementById('searchInput').value.trim();
   currentPage = 1;
@@ -110,7 +143,6 @@ function handleFilter() {
 
 function resetFilters() {
   document.getElementById('searchInput').value = '';
-  document.getElementById('regionFilter').value = '';
   currentSearch = '';
   currentRegion = '';
   currentPage = 1;
