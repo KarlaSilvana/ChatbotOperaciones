@@ -310,7 +310,7 @@ async function getIAConsultationsForExport(fromDate, toDate) {
         COALESCE(d.oficina, 'N/A') as oficina,
         COALESCE(d.establecimiento, 'N/A') as establecimiento
       FROM ia_consultations ic
-      LEFT JOIN directorio d ON ic.phone_number = d.telefono
+      LEFT JOIN directorio d ON SUBSTR(ic.phone_number, -9) = d.telefono
       WHERE ic.query_date BETWEEN ? AND ?
       ORDER BY ic.timestamp DESC
     `;
@@ -347,7 +347,7 @@ async function getEventsForExport(fromDate, toDate) {
         COALESCE(d.oficina, 'N/A') as oficina,
         COALESCE(d.establecimiento, 'N/A') as establecimiento
       FROM interaction_events ie
-      LEFT JOIN directorio d ON ie.phone_number = d.telefono
+      LEFT JOIN directorio d ON SUBSTR(ie.phone_number, -9) = d.telefono
       WHERE DATE(ie.timestamp) BETWEEN ? AND ?
       ORDER BY ie.timestamp DESC
     `;
