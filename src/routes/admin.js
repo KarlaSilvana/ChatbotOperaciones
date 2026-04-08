@@ -370,12 +370,12 @@ router.get('/queries/export-all', async (req, res) => {
     // 3. Convertir a CSV
     const csvConsultations = stringify(consultationsForCSV, {
       header: true,
-      columns: ['timestamp', 'phone_number', 'conversation_id', 'document_sources', 'query_type', 'procedure_name', 'user_query', 'rag_response', 'ia_mode']
+      columns: ['timestamp', 'phone_number', 'conversation_id', 'document_sources', 'query_type', 'procedure_name', 'user_query', 'rag_response', 'ia_mode', 'region', 'oficina', 'establecimiento']
     });
 
     const csvEvents = stringify(events, {
       header: true,
-      columns: ['timestamp', 'phone_number', 'event_type', 'procedure_name']
+      columns: ['timestamp', 'phone_number', 'event_type', 'procedure_name', 'region', 'oficina', 'establecimiento']
     });
 
     // 4. Crear ZIP con ambos CSVs

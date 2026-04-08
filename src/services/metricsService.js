@@ -294,21 +294,25 @@ async function getIAConsultationsForExport(fromDate, toDate) {
   return new Promise((resolve, reject) => {
     const query = `
       SELECT 
-        timestamp,
-        phone_number,
-        conversation_id,
-        document_sources,
+        ic.timestamp,
+        ic.phone_number,
+        ic.conversation_id,
+        ic.document_sources,
         CASE 
-          WHEN procedimiento_nombre = 'Chat General' THEN 'general'
+          WHEN ic.procedimiento_nombre = 'Chat General' THEN 'general'
           ELSE 'procedure'
         END as query_type,
-        procedimiento_nombre as procedure_name,
-        user_query,
-        rag_response,
-        mode as ia_mode
-      FROM ia_consultations
-      WHERE query_date BETWEEN ? AND ?
-      ORDER BY timestamp DESC
+        ic.procedimiento_nombre as procedure_name,
+        ic.user_query,
+        ic.rag_response,
+        ic.mode as ia_mode,
+        COALESCE(d.region, 'N/A') as region,
+        COALESCE(d.oficina, 'N/A') as oficina,
+        COALESCE(d.establecimiento, 'N/A') as establecimiento
+      FROM ia_consultations ic
+      LEFT JOIN directorio d ON ic.phone_number = d.telefono
+      WHERE ic.query_date BETWEEN ? AND ?
+      ORDER BY ic.timestamp DESC
     `;
     
     db.all(query, [fromDate, toDate], (err, rows) => {
@@ -335,13 +339,17 @@ async function getEventsForExport(fromDate, toDate) {
   return new Promise((resolve, reject) => {
     const query = `
       SELECT 
-        timestamp,
-        phone_number,
-        event_type,
-        procedimiento_nombre as procedure_name
-      FROM interaction_events
-      WHERE DATE(timestamp) BETWEEN ? AND ?
-      ORDER BY timestamp DESC
+        ie.timestamp,
+        ie.phone_number,
+        ie.event_type,
+        ie.procedimiento_nombre as procedure_name,
+        COALESCE(d.region, 'N/A') as region,
+        COALESCE(d.oficina, 'N/A') as oficina,
+        COALESCE(d.establecimiento, 'N/A') as establecimiento
+      FROM interaction_events ie
+      LEFT JOIN directorio d ON ie.phone_number = d.telefono
+      WHERE DATE(ie.timestamp) BETWEEN ? AND ?
+      ORDER BY ie.timestamp DESC
     `;
     
     db.all(query, [fromDate, toDate], (err, rows) => {
