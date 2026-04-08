@@ -2,7 +2,7 @@
  * Tests para stateManager.js
  */
 
-const stateManager = require('./stateManager');
+const stateManager = require('../../../src/bot/stateManager');
 
 describe('StateManager Module', () => {
   const testUserId = '+5199999999';

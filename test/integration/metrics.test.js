@@ -1,5 +1,5 @@
-const metricsService = require('./src/services/metricsService');
-const nightlyReportJob = require('./src/jobs/nightly-report-job');
+const metricsService = require('../../src/services/metricsService');
+const nightlyReportJob = require('../../src/jobs/nightly-report-job');
 const path = require('path');
 const fs = require('fs');
 

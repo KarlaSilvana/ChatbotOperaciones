@@ -2,8 +2,8 @@
  * Tests para mediaService.js
  */
 
-const mediaService = require('./mediaService');
-const menus = require('../bot/menus');
+const mediaService = require('../../../src/services/mediaService');
+const menus = require('../../src/bot/menus');
 
 describe('MediaService Module', () => {
   describe('fileExists()', () => {

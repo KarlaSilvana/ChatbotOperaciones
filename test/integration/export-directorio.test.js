@@ -7,8 +7,8 @@
  */
 
 const request = require('supertest');
-const app = require('./app');
-const metricsService = require('./src/services/metricsService');
+const app = require('../../app');
+const metricsService = require('../../src/services/metricsService');
 
 describe('CSV Export with Directorio Data (region, oficina, establecimiento)', () => {
   

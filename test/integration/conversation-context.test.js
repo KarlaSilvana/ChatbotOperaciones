@@ -3,9 +3,9 @@
  * Valida que el chatbot mantenga contexto de conversación entre mensajes
  */
 
-const navigationManager = require('./src/bot/navigationManager');
-const metricsService = require('./src/services/metricsService');
-const RAGService = require('./src/services/ragService');
+const navigationManager = require('../../src/bot/navigationManager');
+const metricsService = require('../../src/services/metricsService');
+const RAGService = require('../../src/services/ragService');
 
 describe('Conversation Context Persistence', () => {
   const testPhoneNumber = '+51999999999';

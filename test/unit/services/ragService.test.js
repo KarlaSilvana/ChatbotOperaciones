@@ -2,7 +2,7 @@
  * ragService.test.js - Tests para RAG Service
  */
 
-const ragService = require('./ragService');
+const ragService = require('../../../src/services/ragService');
 
 describe('RAG Service', () => {
   

@@ -1,4 +1,4 @@
-const metricsService = require('./src/services/metricsService');
+const metricsService = require('../../src/services/metricsService');
 
 describe('Interaction Events - VIDEO y DOCUMENTO (Fix: procedimiento_nombre)', () => {
   beforeAll(async () => {

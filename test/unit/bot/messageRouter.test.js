@@ -2,8 +2,8 @@
  * Tests para messageRouter.js con navigationManager
  */
 
-const { procesarMensaje } = require('./messageRouter');
-const navigationManager = require('./navigationManager');
+const { procesarMensaje } = require('../../../src/bot/messageRouter');
+const navigationManager = require('../../../src/bot/navigationManager');
 
 describe('MessageRouter - Navigation Integration', () => {
   const testUserId = '+5199999999';

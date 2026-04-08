@@ -1,4 +1,4 @@
-const DirectorioService = require('./directorioService');
+const DirectorioService = require('../../../src/services/directorioService');
 
 /**
  * Tests para DirectorioService - Fase 1: Búsqueda Mejorada

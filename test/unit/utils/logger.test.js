@@ -2,7 +2,7 @@
  * Tests para logger.js
  */
 
-const logger = require('./logger');
+const logger = require('../../../src/utils/logger');
 
 describe('Logger Module', () => {
   // Mock console methods

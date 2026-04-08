@@ -1,4 +1,4 @@
-const DirectorioRouter = require('./directorioRouter');
+const DirectorioRouter = require('../../../src/bot/directorioRouter');
 
 describe('DirectorioRouter', () => {
   describe('getMenuMessage()', () => {

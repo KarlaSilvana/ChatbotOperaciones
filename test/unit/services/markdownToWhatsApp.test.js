@@ -3,7 +3,7 @@
  * Tests para convertidor Markdown → WhatsApp
  */
 
-const MarkdownToWhatsApp = require('./markdownToWhatsApp');
+const MarkdownToWhatsApp = require('../../../src/services/markdownToWhatsApp');
 
 describe('MarkdownToWhatsApp Module', () => {
   

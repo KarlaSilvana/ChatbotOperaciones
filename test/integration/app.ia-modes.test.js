@@ -3,8 +3,8 @@
  * Valida que los mensajes iniciales y finales sean modo-específicos
  */
 
-const navigationManager = require('./src/bot/navigationManager');
-const messageRouter = require('./src/bot/messageRouter');
+const navigationManager = require('../../src/bot/navigationManager');
+const messageRouter = require('../../src/bot/messageRouter');
 
 describe('Modos IA - Chat vs Consulta', () => {
   

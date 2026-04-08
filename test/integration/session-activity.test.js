@@ -3,7 +3,7 @@
  * Valida que lastActivity se actualiza en TODOS los flujos del chatbot
  */
 
-const navigationManager = require('./src/bot/navigationManager');
+const navigationManager = require('../../src/bot/navigationManager');
 
 describe('Activity Tracking - Session Management', () => {
   

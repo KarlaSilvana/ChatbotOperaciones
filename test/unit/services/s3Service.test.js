@@ -1,5 +1,5 @@
-const s3Service = require('./s3Service');
-const menusConfig = require('../bot/menus');
+const s3Service = require('../../../src/services/s3Service');
+const menusConfig = require('../../src/bot/menus');
 
 describe('S3Service', () => {
   

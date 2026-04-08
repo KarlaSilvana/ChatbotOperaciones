@@ -1,4 +1,4 @@
-const DirectorioFormatter = require('./directorioFormatter');
+const DirectorioFormatter = require('../../../src/services/directorioFormatter');
 
 describe('DirectorioFormatter', () => {
   const resultadoEjemplo = {

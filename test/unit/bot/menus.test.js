@@ -2,7 +2,7 @@
  * Tests para menus.js (MenusConfig)
  */
 
-const MenusConfig = require('./menus');
+const MenusConfig = require('../../../src/bot/menus');
 
 describe('MenusConfig Module', () => {
   
