@@ -143,7 +143,8 @@ async function procesarMensaje(userId, mensaje) {
       return {
         text: 'Preparando video...',
         action: 'send_video',
-        procedimientoId: resultado.procedimientoId
+        procedimientoId: resultado.procedimientoId,
+        procedimientoNombre: resultado.procedimientoNombre
       };
     }
 
@@ -151,7 +152,8 @@ async function procesarMensaje(userId, mensaje) {
       return {
         text: 'Preparando documento...',
         action: 'send_documento',
-        procedimientoId: resultado.procedimientoId
+        procedimientoId: resultado.procedimientoId,
+        procedimientoNombre: resultado.procedimientoNombre
       };
     }
 

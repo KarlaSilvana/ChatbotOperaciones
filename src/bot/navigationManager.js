@@ -276,15 +276,25 @@ class NavigationManager {
         };
 
       case 'ver_video':
+        // Obtener nombre del procedimiento para registrar evento
+        const procVideo = menus.getProcedimiento(state.context.procedimientoActual);
+        const nombreProcedimientoVideo = procVideo ? procVideo.nombre : 'Unknown';
+        
         return {
           action: 'send_video',
-          procedimientoId: state.context.procedimientoActual
+          procedimientoId: state.context.procedimientoActual,
+          procedimientoNombre: nombreProcedimientoVideo
         };
 
       case 'ver_documento':
+        // Obtener nombre del procedimiento para registrar evento
+        const procDocumento = menus.getProcedimiento(state.context.procedimientoActual);
+        const nombreProcedimientoDocumento = procDocumento ? procDocumento.nombre : 'Unknown';
+        
         return {
           action: 'send_documento',
-          procedimientoId: state.context.procedimientoActual
+          procedimientoId: state.context.procedimientoActual,
+          procedimientoNombre: nombreProcedimientoDocumento
         };
 
       case 'consulta_ia':
