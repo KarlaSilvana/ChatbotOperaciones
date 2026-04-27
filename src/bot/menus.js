@@ -36,16 +36,15 @@ class MenusConfig {
 ¿En qué puedo ayudarte?
 
 1️⃣ 💬 Hablar con asistente (IA)
-2️⃣ 📄 Procedimientos de Operaciones
-3️⃣ 📝 Formularios
-4️⃣ 📞 Directorio Telefónico
+2️⃣ � Formularios
+3️⃣ 📞 Directorio Telefónico
 
 _Escribe el número de tu opción o haz una pregunta directamente._`,
       opciones: {
         '1': 'chatbot',
-        '2': 'procedimientos',
-        '3': 'formularios',
-        '4': 'directorio'
+        // '2': 'procedimientos',  // TEMPORALMENTE OCULTO - En revisión por OSI
+        '2': 'formularios',
+        '3': 'directorio'
       }
     };
   }

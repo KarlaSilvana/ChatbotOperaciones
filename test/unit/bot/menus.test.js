@@ -28,7 +28,7 @@ describe('MenusConfig Module', () => {
       const menu = MenusConfig.getMenuPrincipal();
       expect(menu.text).toContain('👋');
       expect(menu.text).toContain('1️⃣');
-      expect(menu.text).toContain('2️⃣');
+      expect(menu.text).toContain('2️⃣'); // Nota: 2️⃣ es Formularios (Procedimientos temporalmente oculto)
     });
 
     it('debe contener el texto correcto en el menú', () => {

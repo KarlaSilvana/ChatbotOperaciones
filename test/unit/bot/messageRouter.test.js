@@ -54,19 +54,15 @@ describe('MessageRouter - Navigation Integration', () => {
     expect(respuesta.action).toBe('navigate');
   });
 
-  it('debe navegar a procedimientos con opción 2', async () => {
+  // NOTA: Opción 2 (Procedimientos) temporalmente oculta por OSI
+  it('debe navegar a formularios con opción 2', async () => {
     const respuesta = await procesarMensaje(testUserId, '2');
-    expect(respuesta.text).toContain('PROCEDIMIENTOS');
+    expect(respuesta.text).toContain('FORMULARIOS');
     expect(respuesta.action).toBe('navigate');
   });
 
-  it('debe navegar a formularios con opción 3', async () => {
+  it('debe mostrar directorio con opción 3', async () => {
     const respuesta = await procesarMensaje(testUserId, '3');
-    expect(respuesta.text).toContain('FORMULARIOS');
-  });
-
-  it('debe mostrar directorio con opción 4', async () => {
-    const respuesta = await procesarMensaje(testUserId, '4');
     expect(respuesta.action).toBe('navigate');
     expect(respuesta.text).toContain('DIRECTORIO');
   });
