@@ -154,43 +154,30 @@ app.post('/webhook/messages', async (req, res) => {
         // Convertir respuesta Markdown a WhatsApp
         const messages = MarkdownToWhatsApp.splitMessages(ragResponse.response);
         
-        // Enviar todos los mensajes
-        for (const msg of messages) {
-          await twilio_client.messages.create({
-            from: to,
-            to: from,
-            body: msg
-          });
-        }
+        // ⭐ OPCIÓN A: Consolidar los 3 mensajes en 1 solo (optimización de costo Twilio)
+        // Unir todos los fragmentos de la respuesta IA
+        let consolidatedMessage = messages.join('\n');
         
-        // ⭐ ACTUALIZADO: Enviar mensaje final modo-específico (en dos mensajes separados)
+        // Agregar opciones de continuación según el modo
+        consolidatedMessage += '\n\n💬 ¿Tienes otra consulta?\n';
         
-        // Primer mensaje: pregunta de continuación
-        const continuarMessage = '💬 ¿Tienes otra consulta?';
-        await twilio_client.messages.create({
-          from: to,
-          to: from,
-          body: continuarMessage
-        });
-        
-        // Segundo mensaje: opción de volver según el modo
-        let volverMessage = '';
         if (modoIA === 'chat') {
-          volverMessage = '🔙 *0. Volver al Menú Principal 🏠*';
+          consolidatedMessage += '🔙 0. Volver al Menú Principal 🏠';
         } else if (modoIA === 'consulta') {
-          volverMessage = '🔙 *0. Volver al Menú Procedimientos*';
+          consolidatedMessage += '🔙 0. Volver al Menú Procedimientos';
         } else {
-          volverMessage = '🔙 *0. Volver*';
+          consolidatedMessage += '🔙 0. Volver';
         }
         
+        // Enviar mensaje consolidado (1 mensaje = 1 cobro)
         await twilio_client.messages.create({
           from: to,
           to: from,
-          body: volverMessage
+          body: consolidatedMessage
         });
         
         // Log de éxito
-        logger.success(`Respuesta IA enviada a ${from} (${messages.length} mensaje${messages.length > 1 ? 's' : ''}, modo: ${modoIA})`);
+        logger.success(`Respuesta IA enviada a ${from} (1 mensaje consolidado, modo: ${modoIA})`);
         
         res.status(200).send('Message processed');
         return;

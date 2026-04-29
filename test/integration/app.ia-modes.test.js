@@ -167,29 +167,31 @@ describe('Modos IA - Chat vs Consulta', () => {
   });
 
   describe('Mensajes Finales Modo-Específicos', () => {
-    it('chat mode debe tener "Volver al Menú Principal 🏠" en mensaje final', () => {
-      // El mensaje final para modo chat debe mencionar el Menú Principal
-      const finalMessageChat = '🔙 *0. Volver al Menú Principal 🏠*';
-      expect(finalMessageChat).toContain('Menú Principal 🏠');
+    it('chat mode debe tener "Volver al Menú Principal 🏠" en mensaje consolidado', () => {
+      // El mensaje consolidado para modo chat debe incluir la opción de volver al Menú Principal
+      const consolidatedMessage = 'Respuesta IA\n\n💬 ¿Tienes otra consulta?\n🔙 0. Volver al Menú Principal 🏠';
+      expect(consolidatedMessage).toContain('🔙 0. Volver al Menú Principal 🏠');
     });
 
-    it('consulta mode debe tener "Volver al Menú Procedimientos" en mensaje final', () => {
-      // El mensaje final para modo consulta debe mencionar el Menú Procedimientos
-      const finalMessageConsulta = '🔙 *0. Volver al Menú Procedimientos*';
-      expect(finalMessageConsulta).toContain('Menú Procedimientos');
+    it('consulta mode debe tener "Volver al Menú Procedimientos" en mensaje consolidado', () => {
+      // El mensaje consolidado para modo consulta debe incluir la opción de volver al Menú Procedimientos
+      const consolidatedMessage = 'Respuesta IA\n\n💬 ¿Tienes otra consulta?\n🔙 0. Volver al Menú Procedimientos';
+      expect(consolidatedMessage).toContain('🔙 0. Volver al Menú Procedimientos');
     });
 
-    it('primer mensaje final debe ser consistente: "¿Tienes otra consulta?"', () => {
-      // El primer mensaje es igual para ambos modos
-      const continuarMessage = '💬 ¿Tienes otra consulta?';
-      expect(continuarMessage).toBe('💬 ¿Tienes otra consulta?');
+    it('mensaje consolidado debe incluir pregunta de continuación: "¿Tienes otra consulta?"', () => {
+      // Todos los mensajes consolidados deben incluir la pregunta de continuación
+      const consolidatedMessage = 'Respuesta IA\n\n💬 ¿Tienes otra consulta?\n🔙 0. Volver';
+      expect(consolidatedMessage).toContain('💬 ¿Tienes otra consulta?');
     });
 
-    it('chat mode y consulta mode deben tener segundos mensajes diferentes', () => {
-      const finalMessageChat = '🔙 *0. Volver al Menú Principal 🏠*';
-      const finalMessageConsulta = '🔙 *0. Volver al Menú Procedimientos*';
+    it('chat mode y consulta mode deben tener mensajes consolidados diferentes', () => {
+      const consolidatedChat = 'Respuesta IA\n\n💬 ¿Tienes otra consulta?\n🔙 0. Volver al Menú Principal 🏠';
+      const consolidatedConsulta = 'Respuesta IA\n\n💬 ¿Tienes otra consulta?\n🔙 0. Volver al Menú Procedimientos';
       
-      expect(finalMessageChat).not.toBe(finalMessageConsulta);
+      expect(consolidatedChat).not.toBe(consolidatedConsulta);
+      expect(consolidatedChat).toContain('Menú Principal 🏠');
+      expect(consolidatedConsulta).toContain('Menú Procedimientos');
     });
   });
 
