@@ -36,10 +36,8 @@ class MenusConfig {
 ¿En qué puedo ayudarte?
 
 1️⃣ 💬 Hablar con asistente (IA)
-2️⃣ � Formularios
-3️⃣ 📞 Directorio Telefónico
-
-_Escribe el número de tu opción o haz una pregunta directamente._`,
+2️⃣ 📄 Formularios
+3️⃣ 📞 Directorio Telefónico`,
       opciones: {
         '1': 'chatbot',
         // '2': 'procedimientos',  // TEMPORALMENTE OCULTO - En revisión por OSI
