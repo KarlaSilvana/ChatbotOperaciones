@@ -72,7 +72,7 @@ volumes:
     driver_opts:
       type: none
       o: bind
-      device: /home/ubuntu/data/chatbot_data
+      device: /home/operaciones/data/chatbot_data
   
   chatbot_reports:
     driver: local
@@ -80,7 +80,7 @@ volumes:
     driver_opts:
       type: none
       o: bind
-      device: /home/ubuntu/data/chatbot_reports
+      device: /home/operaciones/data/chatbot_reports
 
 # Definición de redes
 networks:
